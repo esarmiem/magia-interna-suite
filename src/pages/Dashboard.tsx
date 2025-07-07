@@ -7,56 +7,87 @@ import {
   TrendingUp, 
   AlertTriangle 
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { StatCard } from '@/components/ui/stat-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { supabase } from '@/integrations/supabase/client';
 
 export function Dashboard() {
-  // Mock data - será reemplazado por datos reales
+  // Fetch dashboard data
+  const { data: dashboardData } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: async () => {
+      const [
+        { data: products },
+        { data: customers },
+        { data: sales },
+        { data: expenses }
+      ] = await Promise.all([
+        supabase.from('products').select('*'),
+        supabase.from('customers').select('*'),
+        supabase.from('sales').select('*, sale_items(*)').gte('sale_date', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
+        supabase.from('expenses').select('*').gte('expense_date', new Date().toISOString().split('T')[0])
+      ]);
+
+      return { products, customers, sales, expenses };
+    },
+  });
+
   const stats = [
     {
       title: 'Ventas del Día',
-      value: '$1,234,567',
-      change: '+12.5%',
+      value: dashboardData?.sales ? 
+        `$${dashboardData.sales.reduce((sum, sale) => sum + sale.total_amount, 0).toFixed(2)}` : 
+        '$0.00',
+      change: dashboardData?.sales?.length ? `+${dashboardData.sales.length} ventas` : 'Sin ventas',
       changeType: 'positive' as const,
       icon: DollarSign
     },
     {
       title: 'Productos en Stock',
-      value: '1,234',
-      change: '-5 hoy',
+      value: dashboardData?.products?.reduce((sum, p) => sum + p.stock_quantity, 0) || 0,
+      change: dashboardData?.products?.filter(p => p.stock_quantity <= p.min_stock).length ? 
+        `-${dashboardData.products.filter(p => p.stock_quantity <= p.min_stock).length} bajo stock` : 
+        'Stock normal',
       changeType: 'neutral' as const,
       icon: Package
     },
     {
       title: 'Clientes Activos',
-      value: '856',
-      change: '+23 nuevo',
+      value: dashboardData?.customers?.filter(c => c.is_active).length || 0,
+      change: `${dashboardData?.customers?.length || 0} total`,
       changeType: 'positive' as const,
       icon: Users
     },
     {
-      title: 'Pedidos Pendientes',
-      value: '42',
-      change: '+8 hoy',
+      title: 'Gastos del Día',
+      value: dashboardData?.expenses ? 
+        `$${dashboardData.expenses.reduce((sum, expense) => sum + expense.amount, 0).toFixed(2)}` : 
+        '$0.00',
+      change: dashboardData?.expenses?.length ? `${dashboardData.expenses.length} gastos` : 'Sin gastos',
       changeType: 'neutral' as const,
       icon: ShoppingCart
     }
   ];
 
-  const topProducts = [
-    { name: 'Blusa Elegante', sales: 45, stock: 12 },
-    { name: 'Vestido Casual', sales: 38, stock: 8 },
-    { name: 'Pantalón Formal', sales: 32, stock: 15 },
-    { name: 'Falda Midi', sales: 29, stock: 3 },
-    { name: 'Camisa Básica', sales: 25, stock: 20 }
-  ];
+  const topProducts = dashboardData?.products
+    ?.sort((a, b) => b.stock_quantity - a.stock_quantity)
+    ?.slice(0, 5)
+    ?.map(product => ({
+      name: product.name,
+      sales: Math.floor(Math.random() * 50), // Mock sales data
+      stock: product.stock_quantity
+    })) || [];
 
-  const alerts = [
-    { product: 'Vestido Rojo Talla M', stock: 2, type: 'critical' },
-    { product: 'Blusa Blanca Talla S', stock: 4, type: 'warning' },
-    { product: 'Pantalón Negro Talla L', stock: 3, type: 'critical' }
-  ];
+  const alerts = dashboardData?.products
+    ?.filter(product => product.stock_quantity <= product.min_stock)
+    ?.slice(0, 5)
+    ?.map(product => ({
+      product: `${product.name} ${product.size ? `Talla ${product.size}` : ''}`,
+      stock: product.stock_quantity,
+      type: product.stock_quantity <= 2 ? 'critical' : 'warning'
+    })) || [];
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -87,22 +118,22 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <TrendingUp className="w-5 h-5 text-primary" />
-              <span>Productos Más Vendidos</span>
+              <span>Productos con Más Stock</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {topProducts.map((product, index) => (
+            {topProducts.length > 0 ? topProducts.map((product, index) => (
               <div key={product.name} className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium">{product.name}</span>
                     <span className="text-sm text-muted-foreground">
-                      {product.sales} vendidos
+                      Stock: {product.stock}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Progress 
-                      value={(product.sales / 50) * 100} 
+                      value={Math.min((product.stock / 50) * 100, 100)} 
                       className="flex-1 h-2" 
                     />
                     <span className={`text-xs px-2 py-1 rounded-full ${
@@ -110,12 +141,16 @@ export function Dashboard() {
                         ? 'text-red-500 bg-red-500/10' 
                         : 'text-magia-success bg-magia-success/10'
                     }`}>
-                      Stock: {product.stock}
+                      {product.stock < 5 ? 'Bajo' : 'Normal'}
                     </span>
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-4 text-muted-foreground">
+                No hay productos disponibles
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -128,7 +163,7 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {alerts.map((alert, index) => (
+            {alerts.length > 0 ? alerts.map((alert, index) => (
               <div 
                 key={index} 
                 className={`p-3 rounded-lg border-l-4 ${
@@ -149,7 +184,11 @@ export function Dashboard() {
                   }`} />
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-4 text-muted-foreground">
+                No hay alertas de stock
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -163,13 +202,20 @@ export function Dashboard() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { name: 'Nueva Venta', href: '/ventas/nueva', color: 'bg-magia-success' },
-              { name: 'Agregar Producto', href: '/productos/nuevo', color: 'bg-primary' },
+              { name: 'Agregar Producto', href: '/productos', color: 'bg-primary' },
               { name: 'Registrar Cliente', href: '/clientes/nuevo', color: 'bg-magia-purple' },
               { name: 'Ver Reportes', href: '/analytics', color: 'bg-magia-gold' }
             ].map((action) => (
               <button
                 key={action.name}
                 className={`${action.color} text-white p-4 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity`}
+                onClick={() => {
+                  if (action.href === '/productos') {
+                    window.location.href = action.href;
+                  } else {
+                    console.log(`Navigate to: ${action.href}`);
+                  }
+                }}
               >
                 {action.name}
               </button>

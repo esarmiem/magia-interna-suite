@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { Layout } from "./components/Layout";
 import { Dashboard } from "./pages/Dashboard";
+import { Products } from "./pages/Products";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,7 +22,7 @@ const App = () => (
           <Layout>
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/productos" element={<div className="text-center p-8 text-muted-foreground">Módulo de Productos - En desarrollo</div>} />
+              <Route path="/productos" element={<Products />} />
               <Route path="/clientes" element={<div className="text-center p-8 text-muted-foreground">Módulo de Clientes - En desarrollo</div>} />
               <Route path="/ventas" element={<div className="text-center p-8 text-muted-foreground">Módulo de Ventas - En desarrollo</div>} />
               <Route path="/gastos" element={<div className="text-center p-8 text-muted-foreground">Módulo de Gastos - En desarrollo</div>} />
