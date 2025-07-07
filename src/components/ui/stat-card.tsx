@@ -1,7 +1,7 @@
-
 import { LucideIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { CSSProperties } from 'react';
 
 interface StatCardProps {
   title: string;
@@ -10,6 +10,7 @@ interface StatCardProps {
   changeType?: 'positive' | 'negative' | 'neutral';
   icon: LucideIcon;
   className?: string;
+  style?: CSSProperties;
 }
 
 export function StatCard({ 
@@ -18,10 +19,14 @@ export function StatCard({
   change, 
   changeType = 'neutral', 
   icon: Icon,
-  className 
+  className,
+  style 
 }: StatCardProps) {
   return (
-    <Card className={cn("p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300", className)}>
+    <Card 
+      className={cn("p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300", className)}
+      style={style}
+    >
       <div className="flex items-center justify-between">
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
