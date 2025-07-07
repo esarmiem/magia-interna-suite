@@ -8,6 +8,11 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { Layout } from "./components/Layout";
 import { Dashboard } from "./pages/Dashboard";
 import { Products } from "./pages/Products";
+import { Customers } from "./pages/Customers";
+import { Sales } from "./pages/Sales";
+import { Expenses } from "./pages/Expenses";
+import { Analytics } from "./pages/Analytics";
+import { Settings } from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,11 +28,11 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/productos" element={<Products />} />
-              <Route path="/clientes" element={<div className="text-center p-8 text-muted-foreground">Módulo de Clientes - En desarrollo</div>} />
-              <Route path="/ventas" element={<div className="text-center p-8 text-muted-foreground">Módulo de Ventas - En desarrollo</div>} />
-              <Route path="/gastos" element={<div className="text-center p-8 text-muted-foreground">Módulo de Gastos - En desarrollo</div>} />
-              <Route path="/analytics" element={<div className="text-center p-8 text-muted-foreground">Módulo de Analytics - En desarrollo</div>} />
-              <Route path="/configuracion" element={<div className="text-center p-8 text-muted-foreground">Configuración - En desarrollo</div>} />
+              <Route path="/clientes" element={<Customers />} />
+              <Route path="/ventas" element={<Sales />} />
+              <Route path="/gastos" element={<Expenses />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/configuracion" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>
