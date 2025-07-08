@@ -158,7 +158,10 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
   };
 
   const handleChange = (field: string, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [field]: field === 'customer_id' && value === 'anonymous' ? null : value 
+    }));
   };
 
   const subtotal = saleItems.reduce((sum, item) => sum + item.total_price, 0);
@@ -178,12 +181,12 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="customer_id">Cliente</Label>
-                <Select value={formData.customer_id} onValueChange={(value) => handleChange('customer_id', value)}>
+                <Select value={formData.customer_id || "anonymous"} onValueChange={(value) => handleChange('customer_id', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar cliente" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Cliente Anónimo</SelectItem>
+                    <SelectItem value="anonymous">Cliente Anónimo</SelectItem>
                     {customers.map((customer) => (
                       <SelectItem key={customer.id} value={customer.id}>
                         {customer.name}
