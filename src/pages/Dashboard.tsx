@@ -1,4 +1,3 @@
-
 import { 
   DollarSign, 
   Package, 
@@ -8,12 +7,15 @@ import {
   AlertTriangle 
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { StatCard } from '@/components/ui/stat-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 
 export function Dashboard() {
+  const navigate = useNavigate();
+
   // Fetch dashboard data
   const { data: dashboardData } = useQuery({
     queryKey: ['dashboard'],
@@ -88,6 +90,25 @@ export function Dashboard() {
       stock: product.stock_quantity,
       type: product.stock_quantity <= 2 ? 'critical' : 'warning'
     })) || [];
+
+  const handleQuickAction = (actionType: string) => {
+    switch (actionType) {
+      case 'nueva-venta':
+        navigate('/ventas');
+        break;
+      case 'agregar-producto':
+        navigate('/productos');
+        break;
+      case 'registrar-cliente':
+        navigate('/clientes');
+        break;
+      case 'ver-reportes':
+        navigate('/analytics');
+        break;
+      default:
+        console.log(`Acción no implementada: ${actionType}`);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -201,21 +222,15 @@ export function Dashboard() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { name: 'Nueva Venta', href: '/ventas/nueva', color: 'bg-magia-success' },
-              { name: 'Agregar Producto', href: '/productos', color: 'bg-primary' },
-              { name: 'Registrar Cliente', href: '/clientes/nuevo', color: 'bg-magia-purple' },
-              { name: 'Ver Reportes', href: '/analytics', color: 'bg-magia-gold' }
+              { name: 'Nueva Venta', action: 'nueva-venta', color: 'bg-magia-success' },
+              { name: 'Agregar Producto', action: 'agregar-producto', color: 'bg-primary' },
+              { name: 'Registrar Cliente', action: 'registrar-cliente', color: 'bg-magia-purple' },
+              { name: 'Ver Reportes', action: 'ver-reportes', color: 'bg-magia-gold' }
             ].map((action) => (
               <button
                 key={action.name}
                 className={`${action.color} text-white p-4 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity`}
-                onClick={() => {
-                  if (action.href === '/productos') {
-                    window.location.href = action.href;
-                  } else {
-                    console.log(`Navigate to: ${action.href}`);
-                  }
-                }}
+                onClick={() => handleQuickAction(action.action)}
               >
                 {action.name}
               </button>
