@@ -24,7 +24,7 @@ export function Settings() {
     userEmail: 'admin@magiainterna.com',
     
     // Configuración de sistema
-    currency: 'EUR',
+    currency: 'COP',
     language: 'es',
     timezone: 'Europe/Madrid',
     
@@ -204,6 +204,7 @@ export function Settings() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="COP">Peso Colombiano ($)</SelectItem>
                       <SelectItem value="EUR">Euro (€)</SelectItem>
                       <SelectItem value="USD">Dólar ($)</SelectItem>
                       <SelectItem value="GBP">Libra (£)</SelectItem>

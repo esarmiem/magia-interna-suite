@@ -40,6 +40,39 @@ export function Analytics() {
         ventas: amount
       }));
 
+      // Ventas por semana
+      const salesByWeek = sales.reduce((acc: Record<string, number>, sale) => {
+        const date = new Date(sale.sale_date);
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - date.getDay());
+        const weekKey = weekStart.toISOString().split('T')[0];
+        acc[weekKey] = (acc[weekKey] || 0) + sale.total_amount;
+        return acc;
+      }, {});
+
+      const weeklyData = Object.entries(salesByWeek)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(-8) // Últimas 8 semanas
+        .map(([week, amount]) => ({
+          semana: `Sem ${new Date(week).getDate()}/${new Date(week).getMonth() + 1}`,
+          ventas: amount
+        }));
+
+      // Ventas por día
+      const salesByDay = sales.reduce((acc: Record<string, number>, sale) => {
+        const dayKey = sale.sale_date.split('T')[0];
+        acc[dayKey] = (acc[dayKey] || 0) + sale.total_amount;
+        return acc;
+      }, {});
+
+      const dailyData = Object.entries(salesByDay)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(-14) // Últimos 14 días
+        .map(([day, amount]) => ({
+          dia: new Date(day).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }),
+          ventas: amount
+        }));
+
       // Productos por categoría
       const productsByCategory = products.reduce((acc: Record<string, number>, product) => {
         acc[product.category] = (acc[product.category] || 0) + 1;
@@ -80,6 +113,8 @@ export function Analytics() {
         totalCustomers,
         lowStockProducts,
         monthlyData,
+        weeklyData,
+        dailyData,
         categoryData,
         expenseCategoryData,
         customerTypeData,
@@ -173,6 +208,40 @@ export function Analytics() {
                 <YAxis />
                 <Tooltip formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Ventas']} />
                 <Line type="monotone" dataKey="ventas" stroke="#8884d8" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Ventas por Semana</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stats.weeklyData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="semana" />
+                <YAxis />
+                <Tooltip formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Ventas']} />
+                <Bar dataKey="ventas" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Ventas por Día</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={stats.dailyData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="dia" />
+                <YAxis />
+                <Tooltip formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Ventas']} />
+                <Line type="monotone" dataKey="ventas" stroke="#ff7300" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
