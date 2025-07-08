@@ -32,14 +32,14 @@ export function Header() {
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </Button>
           
-          <Button
+          {/* <Button
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-foreground relative"
           >
             <Bell size={18} />
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-magia-warning rounded-full text-xs"></span>
-          </Button>
+          </Button>*/}
         </div>
       </div>
     </header>

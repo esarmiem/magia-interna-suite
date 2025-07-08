@@ -113,11 +113,14 @@ export function Dashboard() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Resumen ejecutivo de Magia Interna
-        </p>
+      <div className="flex items-center space-x-4">
+        <img src="/spell-book.png" alt="Spell Book" className="w-12 h-12" />
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Resumen ejecutivo de Magia Interna
+          </p>
+        </div>
       </div>
 
       {/* Stats Grid */}

@@ -90,7 +90,12 @@ export function Expenses() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Gestión de Gastos</h1>
+        <div className="flex items-center space-x-4">
+          <img src="/crystal-ball.png" alt="Crystal Ball" className="w-12 h-12" />
+          <div>
+            <h1 className="text-3xl font-bold">Gestión de Gastos</h1>
+          </div>
+        </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Gasto
