@@ -1,5 +1,7 @@
 # Magia Interna Suite
 
+<img width="1502" alt="image" src="https://github.com/user-attachments/assets/70c513ed-a194-4e80-bf8d-e1d9d6bcde85" />
+
 ## Descripción del Proyecto
 
 **Magia Interna Suite** es una aplicación web de gestión empresarial (ERP) desarrollada para la administración integral de un negocio de ropa. La aplicación proporciona funcionalidades completas para la gestión de inventario, ventas, clientes, gastos y análisis financieros.
