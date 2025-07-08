@@ -142,11 +142,14 @@ export function Products() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Productos</h1>
-          <p className="text-muted-foreground">
-            Gestiona tu inventario de productos textiles
-          </p>
+        <div className="flex items-center space-x-4">
+          <img src="/flying-broom.png" alt="Flying Broom" className="w-12 h-12" />
+          <div>
+            <h1 className="text-3xl font-bold">Productos</h1>
+            <p className="text-muted-foreground">
+              Gestiona tu inventario de productos textiles
+            </p>
+          </div>
         </div>
         <Button onClick={() => setShowForm(true)} className="flex items-center space-x-2">
           <Plus className="w-4 h-4" />

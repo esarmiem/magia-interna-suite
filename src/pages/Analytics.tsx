@@ -101,7 +101,12 @@ export function Analytics() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Analytics</h1>
+        <div className="flex items-center space-x-4">
+          <img src="/cauldron.png" alt="Cauldron" className="w-12 h-12" />
+          <div>
+            <h1 className="text-3xl font-bold">Analytics</h1>
+          </div>
+        </div>
         <Calendar className="h-6 w-6 text-muted-foreground" />
       </div>
 

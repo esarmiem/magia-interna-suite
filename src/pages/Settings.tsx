@@ -72,7 +72,12 @@ export function Settings() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Configuración</h1>
+        <div className="flex items-center space-x-4">
+          <img src="/dreamcatcher.png" alt="Dreamcatcher" className="w-12 h-12" />
+          <div>
+            <h1 className="text-3xl font-bold">Configuración</h1>
+          </div>
+        </div>
         <Settings2 className="h-6 w-6 text-muted-foreground" />
       </div>
 

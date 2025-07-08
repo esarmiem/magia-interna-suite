@@ -37,8 +37,12 @@ export function Sidebar() {
       <div className="flex items-center justify-between p-4 border-b border-border">
         {!collapsed && (
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-magia-purple to-magia-gold rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">MI</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-magia-zinc to-magia-zinc-200 rounded-lg flex items-center justify-center">
+              <img 
+                src="/witch-hat.png" 
+                alt="Magia Interna Logo" 
+                className="w-6 h-6 object-contain rounded-sm"
+              />
             </div>
             <div>
               <h1 className="text-lg font-semibold text-foreground">Magia Interna</h1>
@@ -86,6 +90,15 @@ export function Sidebar() {
       {/* Footer */}
       {!collapsed && (
         <div className="p-4 border-t border-border">
+          <div className="flex items-center justify-center mb-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-magia-purple to-magia-gold rounded-lg flex items-center justify-center">
+              <img 
+                src="/magiainternalogo.webp" 
+                alt="Magia Interna Logo" 
+                className="w-12 h-12 object-contain rounded-xl p-1"
+              />
+            </div>
+          </div>
           <div className="flex items-center space-x-2 text-xs text-muted-foreground">
             <div className="w-2 h-2 bg-magia-success rounded-full"></div>
             <span>Sistema activo</span>
