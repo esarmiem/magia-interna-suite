@@ -370,6 +370,6 @@ Para soporte técnico o preguntas sobre el proyecto, contactar al equipo de desa
 
 ---
 
-**Última actualización**: Julio 2024
+**Última actualización**: Julio 2025
 **Versión**: 2.0.0
 **Estado**: Producción con sistema de inventario automático
