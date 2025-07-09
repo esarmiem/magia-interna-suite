@@ -11,7 +11,7 @@ export function Header() {
     <header className="border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
       <div className="flex items-center justify-between h-16 px-6">
         {/* Search */}
-        <div className="flex items-center space-x-4 flex-1 max-w-md">
+        {/*<div className="flex items-center space-x-4 flex-1 max-w-md">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
             <Input
@@ -19,7 +19,7 @@ export function Header() {
               className="pl-10 bg-background/50"
             />
           </div>
-        </div>
+        </div>*/}
 
         {/* Actions */}
         <div className="flex items-center space-x-2">
