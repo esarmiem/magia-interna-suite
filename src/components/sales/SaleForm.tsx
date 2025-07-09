@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,6 +53,37 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     },
   });
 
+  // Buscar el cliente anónimo
+  const anonymousCustomer = customers.find(c => c.name === 'Cliente Anónimo');
+
+  // Función para crear el cliente anónimo si no existe
+  const createAnonymousCustomer = useCallback(async () => {
+    if (!anonymousCustomer) {
+      const { data, error } = await supabase
+        .from('customers')
+        .insert({
+          name: 'Cliente Anónimo',
+          customer_type: 'anonymous',
+          is_active: true
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating anonymous customer:', error);
+        return;
+      }
+      
+      // Invalidar la query para refrescar la lista de clientes
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    }
+  }, [anonymousCustomer, queryClient]);
+
+  // Crear cliente anónimo cuando se carga el componente
+  useEffect(() => {
+    createAnonymousCustomer();
+  }, [createAnonymousCustomer]);
+
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
@@ -70,16 +101,22 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       const totalAmount = data.items.reduce((sum, item) => sum + item.total_price, 0) 
         + data.saleData.tax_amount - data.saleData.discount_amount;
 
+      // Si se seleccionó cliente anónimo, usar su ID
+      let customerId = data.saleData.customer_id;
+      if (data.saleData.customer_id === 'anonymous' && anonymousCustomer) {
+        customerId = anonymousCustomer.id;
+      }
+
       if (sale) {
         const { error } = await supabase
           .from('sales')
-          .update({ ...data.saleData, total_amount: totalAmount })
+          .update({ ...data.saleData, customer_id: customerId, total_amount: totalAmount })
           .eq('id', sale.id);
         if (error) throw error;
       } else {
         const { data: newSale, error: saleError } = await supabase
           .from('sales')
-          .insert({ ...data.saleData, total_amount: totalAmount })
+          .insert({ ...data.saleData, customer_id: customerId, total_amount: totalAmount })
           .select()
           .single();
         
@@ -99,6 +136,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
       toast({
         title: sale ? "Venta actualizada" : "Venta creada",
         description: `La venta ha sido ${sale ? 'actualizada' : 'creada'} exitosamente.`,
@@ -160,7 +198,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
   const handleChange = (field: string, value: string | number) => {
     setFormData(prev => ({ 
       ...prev, 
-      [field]: field === 'customer_id' && value === 'anonymous' ? null : value 
+      [field]: value 
     }));
   };
 
