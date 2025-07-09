@@ -52,9 +52,11 @@ export function Sales() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast({
         title: "Venta eliminada",
-        description: "La venta ha sido eliminada exitosamente.",
+        description: "La venta ha sido eliminada exitosamente y el inventario ha sido restaurado.",
       });
     },
     onError: () => {

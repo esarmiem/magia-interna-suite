@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,7 +89,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price')
+        .select('id, name, price, stock_quantity')
         .eq('is_active', true);
       if (error) throw error;
       return data;
@@ -137,16 +137,25 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast({
         title: sale ? "Venta actualizada" : "Venta creada",
         description: `La venta ha sido ${sale ? 'actualizada' : 'creada'} exitosamente.`,
       });
       onClose();
     },
-    onError: () => {
+    onError: (error: Error) => {
+      let errorMessage = `No se pudo ${sale ? 'actualizar' : 'crear'} la venta.`;
+      
+      // Manejar errores específicos de stock insuficiente
+      if (error.message && error.message.includes('Stock insuficiente')) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error",
-        description: `No se pudo ${sale ? 'actualizar' : 'crear'} la venta.`,
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -205,6 +214,19 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
   const subtotal = saleItems.reduce((sum, item) => sum + item.total_price, 0);
   const total = subtotal + formData.tax_amount - formData.discount_amount;
 
+  // Función para obtener el stock disponible de un producto
+  const getProductStock = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    return product?.stock_quantity || 0;
+  };
+
+  // Función para verificar si hay stock insuficiente
+  const hasInsufficientStock = (item: SaleItem) => {
+    if (!item.product_id) return false;
+    const availableStock = getProductStock(item.product_id);
+    return item.quantity > availableStock;
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -258,60 +280,80 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                 </Button>
               </div>
 
-              {saleItems.map((item, index) => (
-                <div key={index} className="grid grid-cols-5 gap-2 mb-2 items-end">
-                  <div>
-                    <Label>Producto</Label>
-                    <Select value={item.product_id} onValueChange={(value) => updateSaleItem(index, 'product_id', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {products.map((product) => (
-                          <SelectItem key={product.id} value={product.id}>
-                            {product.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              {saleItems.map((item, index) => {
+                const product = products.find(p => p.id === item.product_id);
+                const insufficientStock = hasInsufficientStock(item);
+                
+                return (
+                  <div key={index} className="grid grid-cols-6 gap-2 mb-2 items-end border p-3 rounded-lg">
+                    <div>
+                      <Label>Producto</Label>
+                      <Select value={item.product_id} onValueChange={(value) => updateSaleItem(index, 'product_id', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {products.map((product) => (
+                            <SelectItem key={product.id} value={product.id}>
+                              {product.name} (Stock: {product.stock_quantity})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Cantidad</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => updateSaleItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                        className={insufficientStock ? 'border-red-500' : ''}
+                      />
+                      {insufficientStock && (
+                        <div className="flex items-center text-red-500 text-xs mt-1">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          Stock insuficiente
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <Label>Stock Disp.</Label>
+                      <Input
+                        value={product ? product.stock_quantity : '-'}
+                        readOnly
+                        className="bg-gray-50"
+                      />
+                    </div>
+                    <div>
+                      <Label>Precio Unit.</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={item.unit_price}
+                        onChange={(e) => updateSaleItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Total</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={item.total_price.toFixed(2)}
+                        readOnly
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeSaleItem(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <div>
-                    <Label>Cantidad</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => updateSaleItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                    />
-                  </div>
-                  <div>
-                    <Label>Precio Unit.</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={item.unit_price}
-                      onChange={(e) => updateSaleItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div>
-                    <Label>Total</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={item.total_price.toFixed(2)}
-                      readOnly
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeSaleItem(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -359,7 +401,11 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
             </div>
 
             <div className="flex space-x-2 pt-4">
-              <Button type="submit" disabled={mutation.isPending} className="flex-1">
+              <Button 
+                type="submit" 
+                disabled={mutation.isPending || saleItems.some(hasInsufficientStock)}
+                className="flex-1"
+              >
                 {mutation.isPending ? 'Guardando...' : (sale ? 'Actualizar' : 'Crear')}
               </Button>
               <Button type="button" variant="outline" onClick={onClose}>
