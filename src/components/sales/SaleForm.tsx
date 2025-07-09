@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { formatColombianPeso, parseColombianPeso, formatInputForDisplay } from '@/lib/currency';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Sale = Tables<'sales'>;
@@ -37,10 +38,23 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     status: sale?.status || 'completed',
   });
 
+  const [displayData, setDisplayData] = useState({
+    discount_amount: formatColombianPeso(sale?.discount_amount || 0),
+    tax_amount: formatColombianPeso(sale?.tax_amount || 0),
+  });
+
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
+  const [displayItems, setDisplayItems] = useState<Array<{
+    unit_price: string;
+    total_price: string;
+  }>>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Buscar el cliente anónimo (activo o inactivo)
+  const [anonymousCustomer, setAnonymousCustomer] = useState<Customer | null>(null);
+
+  // Buscar todos los clientes activos para el selector
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
@@ -53,12 +67,69 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     },
   });
 
+  // Función para buscar o crear el cliente anónimo
+  const fetchOrCreateAnonymousCustomer = useCallback(async () => {
+    // Buscar cualquier cliente anónimo, activo o no
+    const { data: existing, error: findError } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('name', 'Cliente Anónimo')
+      .limit(1)
+      .maybeSingle();
+
+    if (findError) {
+      console.error('Error searching for anonymous customer:', findError);
+      return;
+    }
+
+    if (existing) {
+      // Si existe pero está inactivo, actívalo
+      if (!existing.is_active) {
+        const { error: updateError } = await supabase
+          .from('customers')
+          .update({ is_active: true })
+          .eq('id', existing.id);
+        if (updateError) {
+          console.error('Error reactivating anonymous customer:', updateError);
+          return;
+        }
+        queryClient.invalidateQueries({ queryKey: ['customers'] });
+        setAnonymousCustomer({ ...existing, is_active: true });
+      } else {
+        setAnonymousCustomer(existing);
+      }
+      return;
+    }
+
+    // Si no existe, créalo
+    const { data: created, error: createError } = await supabase
+      .from('customers')
+      .insert({
+        name: 'Cliente Anónimo',
+        customer_type: 'anonymous',
+        is_active: true
+      })
+      .select()
+      .single();
+    if (createError) {
+      console.error('Error creating anonymous customer:', createError);
+      return;
+    }
+    setAnonymousCustomer(created);
+    queryClient.invalidateQueries({ queryKey: ['customers'] });
+  }, [queryClient]);
+
+  // Ejecutar la función al cargar el componente
+  useEffect(() => {
+    fetchOrCreateAnonymousCustomer();
+  }, [fetchOrCreateAnonymousCustomer]);
+
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price')
+        .select('id, name, price, stock_quantity')
         .eq('is_active', true);
       if (error) throw error;
       return data;
@@ -70,16 +141,22 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       const totalAmount = data.items.reduce((sum, item) => sum + item.total_price, 0) 
         + data.saleData.tax_amount - data.saleData.discount_amount;
 
+      // Si se seleccionó cliente anónimo, usar su ID
+      let customerId = data.saleData.customer_id;
+      if (data.saleData.customer_id === 'anonymous' && anonymousCustomer) {
+        customerId = anonymousCustomer.id;
+      }
+
       if (sale) {
         const { error } = await supabase
           .from('sales')
-          .update({ ...data.saleData, total_amount: totalAmount })
+          .update({ ...data.saleData, customer_id: customerId, total_amount: totalAmount })
           .eq('id', sale.id);
         if (error) throw error;
       } else {
         const { data: newSale, error: saleError } = await supabase
           .from('sales')
-          .insert({ ...data.saleData, total_amount: totalAmount })
+          .insert({ ...data.saleData, customer_id: customerId, total_amount: totalAmount })
           .select()
           .single();
         
@@ -99,16 +176,31 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast({
         title: sale ? "Venta actualizada" : "Venta creada",
         description: `La venta ha sido ${sale ? 'actualizada' : 'creada'} exitosamente.`,
       });
       onClose();
     },
-    onError: () => {
+    onError: (error: Error) => {
+      let errorMessage = `No se pudo ${sale ? 'actualizar' : 'crear'} la venta.`;
+      
+      // Manejar errores específicos de stock insuficiente
+      if (error.message && error.message.includes('Stock insuficiente')) {
+        errorMessage = error.message;
+      } else if (error.message) {
+        // Mostrar el mensaje de error específico si está disponible
+        errorMessage = error.message;
+      }
+      
+      console.error('Error en la venta:', error);
+      
       toast({
         title: "Error",
-        description: `No se pudo ${sale ? 'actualizar' : 'crear'} la venta.`,
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -121,27 +213,61 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       unit_price: 0,
       total_price: 0,
     }]);
+    setDisplayItems([...displayItems, {
+      unit_price: '',
+      total_price: '',
+    }]);
   };
 
   const removeSaleItem = (index: number) => {
     setSaleItems(saleItems.filter((_, i) => i !== index));
+    setDisplayItems(displayItems.filter((_, i) => i !== index));
   };
 
   const updateSaleItem = (index: number, field: keyof SaleItem, value: string | number) => {
     const updatedItems = [...saleItems];
-    updatedItems[index] = { ...updatedItems[index], [field]: value };
-    
+    const updatedDisplayItems = [...displayItems];
+
     if (field === 'product_id') {
+      // Actualizar el product_id primero
+      updatedItems[index].product_id = value as string;
+      
       const product = products.find(p => p.id === value);
       if (product) {
         updatedItems[index].unit_price = product.price;
         updatedItems[index].total_price = updatedItems[index].quantity * product.price;
+        updatedDisplayItems[index].unit_price = formatColombianPeso(product.price);
+        updatedDisplayItems[index].total_price = formatColombianPeso(updatedItems[index].total_price);
       }
     } else if (field === 'quantity' || field === 'unit_price') {
+      if (field === 'quantity') {
+        updatedItems[index].quantity = value as number;
+      } else {
+        updatedItems[index].unit_price = value as number;
+        updatedDisplayItems[index].unit_price = formatColombianPeso(value as number);
+      }
       updatedItems[index].total_price = updatedItems[index].quantity * updatedItems[index].unit_price;
+      updatedDisplayItems[index].total_price = formatColombianPeso(updatedItems[index].total_price);
     }
-    
+
     setSaleItems(updatedItems);
+    setDisplayItems(updatedDisplayItems);
+  };
+
+  const updateDisplayItem = (index: number, field: 'unit_price' | 'total_price', value: string) => {
+    const updatedDisplayItems = [...displayItems];
+    const updatedItems = [...saleItems];
+
+    if (field === 'unit_price') {
+      const numericValue = parseColombianPeso(value);
+      updatedItems[index].unit_price = numericValue;
+      updatedItems[index].total_price = updatedItems[index].quantity * numericValue;
+      updatedDisplayItems[index].unit_price = value;
+      updatedDisplayItems[index].total_price = formatColombianPeso(updatedItems[index].total_price);
+    }
+
+    setSaleItems(updatedItems);
+    setDisplayItems(updatedDisplayItems);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -154,18 +280,57 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       });
       return;
     }
+
+    // Validar que todos los items tengan un producto seleccionado
+    const itemsWithoutProduct = saleItems.filter(item => !item.product_id);
+    if (itemsWithoutProduct.length > 0) {
+      toast({
+        title: "Error",
+        description: "Todos los items deben tener un producto seleccionado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar que no haya stock insuficiente
+    const itemsWithInsufficientStock = saleItems.filter(hasInsufficientStock);
+    if (itemsWithInsufficientStock.length > 0) {
+      toast({
+        title: "Error",
+        description: "Hay productos con stock insuficiente. Revise las cantidades.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     mutation.mutate({ saleData: formData, items: saleItems });
   };
 
   const handleChange = (field: string, value: string | number) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      [field]: field === 'customer_id' && value === 'anonymous' ? null : value 
-    }));
+    if (field === 'discount_amount' || field === 'tax_amount') {
+      const numericValue = typeof value === 'string' ? parseColombianPeso(value) : value;
+      setFormData(prev => ({ ...prev, [field]: numericValue }));
+      setDisplayData(prev => ({ ...prev, [field]: typeof value === 'string' ? value : formatColombianPeso(value) }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const subtotal = saleItems.reduce((sum, item) => sum + item.total_price, 0);
   const total = subtotal + formData.tax_amount - formData.discount_amount;
+
+  // Función para obtener el stock disponible de un producto
+  const getProductStock = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    return product?.stock_quantity || 0;
+  };
+
+  // Función para verificar si hay stock insuficiente
+  const hasInsufficientStock = (item: SaleItem) => {
+    if (!item.product_id) return false;
+    const availableStock = getProductStock(item.product_id);
+    return item.quantity > availableStock;
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -220,60 +385,80 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                 </Button>
               </div>
 
-              {saleItems.map((item, index) => (
-                <div key={index} className="grid grid-cols-5 gap-2 mb-2 items-end">
-                  <div>
-                    <Label>Producto</Label>
-                    <Select value={item.product_id} onValueChange={(value) => updateSaleItem(index, 'product_id', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {products.map((product) => (
-                          <SelectItem key={product.id} value={product.id}>
-                            {product.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              {saleItems.map((item, index) => {
+                const product = products.find(p => p.id === item.product_id);
+                const insufficientStock = hasInsufficientStock(item);
+                
+                return (
+                  <div key={index} className="grid grid-cols-6 gap-2 mb-2 items-end border p-3 rounded-lg">
+                    <div>
+                      <Label>Producto</Label>
+                      <Select value={item.product_id} onValueChange={(value) => updateSaleItem(index, 'product_id', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {products.map((product) => (
+                            <SelectItem key={product.id} value={product.id}>
+                              {product.name} (Stock: {product.stock_quantity})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Cantidad</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => updateSaleItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                        className={insufficientStock ? 'border-red-500' : ''}
+                      />
+                      {insufficientStock && (
+                        <div className="flex items-center text-red-500 text-xs mt-1">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          Stock insuficiente
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <Label>Stock Disp.</Label>
+                      <Input
+                        value={product ? product.stock_quantity : '-'}
+                        readOnly
+                        className="bg-gray-50"
+                      />
+                    </div>
+                    <div>
+                      <Label>Precio Unit.</Label>
+                      <Input
+                        type="text"
+                        placeholder="Ej: 129.000"
+                        value={displayItems[index]?.unit_price || ''}
+                        onChange={(e) => updateDisplayItem(index, 'unit_price', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Total</Label>
+                      <Input
+                        type="text"
+                        value={displayItems[index]?.total_price || ''}
+                        readOnly
+                        className="bg-gray-50"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeSaleItem(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <div>
-                    <Label>Cantidad</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => updateSaleItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                    />
-                  </div>
-                  <div>
-                    <Label>Precio Unit.</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={item.unit_price}
-                      onChange={(e) => updateSaleItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div>
-                    <Label>Total</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={item.total_price.toFixed(2)}
-                      readOnly
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeSaleItem(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -281,10 +466,11 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                 <Label htmlFor="discount_amount">Descuento</Label>
                 <Input
                   id="discount_amount"
-                  type="number"
-                  step="0.01"
-                  value={formData.discount_amount}
-                  onChange={(e) => handleChange('discount_amount', parseFloat(e.target.value) || 0)}
+                  type="text"
+                  placeholder="Ej: 10.000"
+                  min="0"
+                  value={displayData.discount_amount}
+                  onChange={(e) => handleChange('discount_amount', e.target.value)}
                 />
               </div>
 
@@ -292,17 +478,18 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                 <Label htmlFor="tax_amount">Impuestos</Label>
                 <Input
                   id="tax_amount"
-                  type="number"
-                  step="0.01"
-                  value={formData.tax_amount}
-                  onChange={(e) => handleChange('tax_amount', parseFloat(e.target.value) || 0)}
+                  type="text"
+                  placeholder="Ej: 5.000"
+                  min="0"
+                  value={displayData.tax_amount}
+                  onChange={(e) => handleChange('tax_amount', e.target.value)}
                 />
               </div>
 
               <div>
                 <Label>Total Final</Label>
                 <Input
-                  value={`€${total.toFixed(2)}`}
+                  value={formatColombianPeso(total)}
                   readOnly
                 />
               </div>
@@ -319,7 +506,15 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
             </div>
 
             <div className="flex space-x-2 pt-4">
-              <Button type="submit" disabled={mutation.isPending} className="flex-1">
+              <Button 
+                type="submit" 
+                disabled={
+                  mutation.isPending || 
+                  saleItems.some(hasInsufficientStock) ||
+                  saleItems.some(item => !item.product_id)
+                }
+                className="flex-1"
+              >
                 {mutation.isPending ? 'Guardando...' : (sale ? 'Actualizar' : 'Crear')}
               </Button>
               <Button type="button" variant="outline" onClick={onClose}>

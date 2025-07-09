@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
 import { useToast } from '@/hooks/use-toast';
+import { formatColombianPeso } from '@/lib/currency';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Expense = Tables<'expenses'>;
@@ -108,7 +109,7 @@ export function Expenses() {
             <CardTitle className="text-sm font-medium">Total de Gastos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€{totalExpenses.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatColombianPeso(totalExpenses)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -117,10 +118,10 @@ export function Expenses() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              €{expenses
+              {formatColombianPeso(expenses
                 .filter(expense => new Date(expense.expense_date).getMonth() === new Date().getMonth())
                 .reduce((sum, expense) => sum + expense.amount, 0)
-                .toFixed(2)}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -154,7 +155,7 @@ export function Expenses() {
                 <TableHead>Fecha</TableHead>
                 <TableHead>Descripción</TableHead>
                 <TableHead>Categoría</TableHead>
-                <TableHead>Cantidad</TableHead>
+                <TableHead>Valor</TableHead>
                 <TableHead>Método de Pago</TableHead>
                 <TableHead>Acciones</TableHead>
               </TableRow>
@@ -167,7 +168,7 @@ export function Expenses() {
                   <TableCell>
                     <Badge variant="outline">{expense.category}</Badge>
                   </TableCell>
-                  <TableCell>€{expense.amount.toFixed(2)}</TableCell>
+                  <TableCell>{formatColombianPeso(expense.amount)}</TableCell>
                   <TableCell>{expense.payment_method}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">

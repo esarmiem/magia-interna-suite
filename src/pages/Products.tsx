@@ -25,6 +25,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { ProductForm } from '@/components/products/ProductForm';
 import { toast } from '@/hooks/use-toast';
+import { formatColombianPeso } from '@/lib/currency';
 
 interface Product {
   id: string;
@@ -268,7 +269,7 @@ export function Products() {
                   </TableCell>
                   <TableCell className="font-mono text-sm">{product.sku}</TableCell>
                   <TableCell>{product.category}</TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
+                  <TableCell>{formatColombianPeso(product.price)}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       <span className={product.stock_quantity <= product.min_stock ? 'text-orange-600 font-medium' : ''}>

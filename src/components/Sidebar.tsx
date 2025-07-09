@@ -21,8 +21,9 @@ const navigation = [
   { name: 'Ventas', href: '/ventas', icon: ShoppingCart },
   { name: 'Gastos', href: '/gastos', icon: FileText },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Configuración', href: '/configuracion', icon: Settings },
 ];
+
+// { name: 'Configuración', href: '/configuracion', icon: Settings },
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);

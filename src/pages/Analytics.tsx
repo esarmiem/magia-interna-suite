@@ -4,6 +4,7 @@ import { Calendar, TrendingUp, Users, Package, DollarSign, ShoppingCart } from '
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { formatColombianPeso } from '@/lib/currency';
 
 export function Analytics() {
   const { data: stats, isLoading } = useQuery({
@@ -153,9 +154,9 @@ export function Analytics() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€{stats.totalSales.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatColombianPeso(stats.totalSales)}</div>
             <p className="text-xs text-muted-foreground">
-              Beneficio: €{stats.profit.toFixed(2)}
+              Beneficio: {formatColombianPeso(stats.profit)}
             </p>
           </CardContent>
         </Card>
@@ -166,7 +167,7 @@ export function Analytics() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€{stats.totalExpenses.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatColombianPeso(stats.totalExpenses)}</div>
           </CardContent>
         </Card>
 
@@ -202,13 +203,13 @@ export function Analytics() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={stats.monthlyData}>
+              <BarChart data={stats.monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Ventas']} />
-                <Line type="monotone" dataKey="ventas" stroke="#8884d8" strokeWidth={2} />
-              </LineChart>
+                <Tooltip formatter={(value) => [formatColombianPeso(Number(value)), 'Ventas']} />
+                <Bar dataKey="ventas" fill="#8884d8" />
+              </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -219,13 +220,13 @@ export function Analytics() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={stats.weeklyData}>
+              <LineChart data={stats.weeklyData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="semana" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Ventas']} />
-                <Bar dataKey="ventas" fill="#82ca9d" />
-              </BarChart>
+                <Tooltip formatter={(value) => [formatColombianPeso(Number(value)), 'Ventas']} />
+                <Line type="monotone" dataKey="ventas" stroke="#8884d8" strokeWidth={2} />
+              </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -240,8 +241,8 @@ export function Analytics() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="dia" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Ventas']} />
-                <Line type="monotone" dataKey="ventas" stroke="#ff7300" strokeWidth={2} />
+                <Tooltip formatter={(value) => [formatColombianPeso(Number(value)), 'Ventas']} />
+                <Line type="monotone" dataKey="ventas" stroke="#82ca9d" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -284,8 +285,8 @@ export function Analytics() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="category" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Gastos']} />
-                <Bar dataKey="amount" fill="#82ca9d" />
+                <Tooltip formatter={(value) => [formatColombianPeso(Number(value)), 'Gastos']} />
+                <Bar dataKey="amount" fill="#ffc658" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
