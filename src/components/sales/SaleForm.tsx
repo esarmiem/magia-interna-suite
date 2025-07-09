@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { formatColombianPeso, parseColombianPeso, formatInputForDisplay } from '@/lib/currency';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Sale = Tables<'sales'>;
@@ -37,7 +38,16 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     status: sale?.status || 'completed',
   });
 
+  const [displayData, setDisplayData] = useState({
+    discount_amount: formatColombianPeso(sale?.discount_amount || 0),
+    tax_amount: formatColombianPeso(sale?.tax_amount || 0),
+  });
+
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
+  const [displayItems, setDisplayItems] = useState<Array<{
+    unit_price: string;
+    total_price: string;
+  }>>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -181,7 +191,12 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       // Manejar errores específicos de stock insuficiente
       if (error.message && error.message.includes('Stock insuficiente')) {
         errorMessage = error.message;
+      } else if (error.message) {
+        // Mostrar el mensaje de error específico si está disponible
+        errorMessage = error.message;
       }
+      
+      console.error('Error en la venta:', error);
       
       toast({
         title: "Error",
@@ -198,27 +213,61 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       unit_price: 0,
       total_price: 0,
     }]);
+    setDisplayItems([...displayItems, {
+      unit_price: '',
+      total_price: '',
+    }]);
   };
 
   const removeSaleItem = (index: number) => {
     setSaleItems(saleItems.filter((_, i) => i !== index));
+    setDisplayItems(displayItems.filter((_, i) => i !== index));
   };
 
   const updateSaleItem = (index: number, field: keyof SaleItem, value: string | number) => {
     const updatedItems = [...saleItems];
-    updatedItems[index] = { ...updatedItems[index], [field]: value };
-    
+    const updatedDisplayItems = [...displayItems];
+
     if (field === 'product_id') {
+      // Actualizar el product_id primero
+      updatedItems[index].product_id = value as string;
+      
       const product = products.find(p => p.id === value);
       if (product) {
         updatedItems[index].unit_price = product.price;
         updatedItems[index].total_price = updatedItems[index].quantity * product.price;
+        updatedDisplayItems[index].unit_price = formatColombianPeso(product.price);
+        updatedDisplayItems[index].total_price = formatColombianPeso(updatedItems[index].total_price);
       }
     } else if (field === 'quantity' || field === 'unit_price') {
+      if (field === 'quantity') {
+        updatedItems[index].quantity = value as number;
+      } else {
+        updatedItems[index].unit_price = value as number;
+        updatedDisplayItems[index].unit_price = formatColombianPeso(value as number);
+      }
       updatedItems[index].total_price = updatedItems[index].quantity * updatedItems[index].unit_price;
+      updatedDisplayItems[index].total_price = formatColombianPeso(updatedItems[index].total_price);
     }
-    
+
     setSaleItems(updatedItems);
+    setDisplayItems(updatedDisplayItems);
+  };
+
+  const updateDisplayItem = (index: number, field: 'unit_price' | 'total_price', value: string) => {
+    const updatedDisplayItems = [...displayItems];
+    const updatedItems = [...saleItems];
+
+    if (field === 'unit_price') {
+      const numericValue = parseColombianPeso(value);
+      updatedItems[index].unit_price = numericValue;
+      updatedItems[index].total_price = updatedItems[index].quantity * numericValue;
+      updatedDisplayItems[index].unit_price = value;
+      updatedDisplayItems[index].total_price = formatColombianPeso(updatedItems[index].total_price);
+    }
+
+    setSaleItems(updatedItems);
+    setDisplayItems(updatedDisplayItems);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -231,14 +280,40 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       });
       return;
     }
+
+    // Validar que todos los items tengan un producto seleccionado
+    const itemsWithoutProduct = saleItems.filter(item => !item.product_id);
+    if (itemsWithoutProduct.length > 0) {
+      toast({
+        title: "Error",
+        description: "Todos los items deben tener un producto seleccionado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar que no haya stock insuficiente
+    const itemsWithInsufficientStock = saleItems.filter(hasInsufficientStock);
+    if (itemsWithInsufficientStock.length > 0) {
+      toast({
+        title: "Error",
+        description: "Hay productos con stock insuficiente. Revise las cantidades.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     mutation.mutate({ saleData: formData, items: saleItems });
   };
 
   const handleChange = (field: string, value: string | number) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      [field]: value 
-    }));
+    if (field === 'discount_amount' || field === 'tax_amount') {
+      const numericValue = typeof value === 'string' ? parseColombianPeso(value) : value;
+      setFormData(prev => ({ ...prev, [field]: numericValue }));
+      setDisplayData(prev => ({ ...prev, [field]: typeof value === 'string' ? value : formatColombianPeso(value) }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const subtotal = saleItems.reduce((sum, item) => sum + item.total_price, 0);
@@ -358,19 +433,19 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                     <div>
                       <Label>Precio Unit.</Label>
                       <Input
-                        type="number"
-                        step="0.01"
-                        value={item.unit_price}
-                        onChange={(e) => updateSaleItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                        type="text"
+                        placeholder="Ej: 129.000"
+                        value={displayItems[index]?.unit_price || ''}
+                        onChange={(e) => updateDisplayItem(index, 'unit_price', e.target.value)}
                       />
                     </div>
                     <div>
                       <Label>Total</Label>
                       <Input
-                        type="number"
-                        step="0.01"
-                        value={item.total_price.toFixed(2)}
+                        type="text"
+                        value={displayItems[index]?.total_price || ''}
                         readOnly
+                        className="bg-gray-50"
                       />
                     </div>
                     <Button
@@ -391,11 +466,11 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                 <Label htmlFor="discount_amount">Descuento</Label>
                 <Input
                   id="discount_amount"
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  placeholder="Ej: 10.000"
                   min="0"
-                  value={formData.discount_amount}
-                  onChange={(e) => handleChange('discount_amount', parseFloat(e.target.value) || 0)}
+                  value={displayData.discount_amount}
+                  onChange={(e) => handleChange('discount_amount', e.target.value)}
                 />
               </div>
 
@@ -403,18 +478,18 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                 <Label htmlFor="tax_amount">Impuestos</Label>
                 <Input
                   id="tax_amount"
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  placeholder="Ej: 5.000"
                   min="0"
-                  value={formData.tax_amount}
-                  onChange={(e) => handleChange('tax_amount', parseFloat(e.target.value) || 0)}
+                  value={displayData.tax_amount}
+                  onChange={(e) => handleChange('tax_amount', e.target.value)}
                 />
               </div>
 
               <div>
                 <Label>Total Final</Label>
                 <Input
-                  value={`€${total.toFixed(2)}`}
+                  value={formatColombianPeso(total)}
                   readOnly
                 />
               </div>
@@ -433,7 +508,11 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
             <div className="flex space-x-2 pt-4">
               <Button 
                 type="submit" 
-                disabled={mutation.isPending || saleItems.some(hasInsufficientStock)}
+                disabled={
+                  mutation.isPending || 
+                  saleItems.some(hasInsufficientStock) ||
+                  saleItems.some(item => !item.product_id)
+                }
                 className="flex-1"
               >
                 {mutation.isPending ? 'Guardando...' : (sale ? 'Actualizar' : 'Crear')}

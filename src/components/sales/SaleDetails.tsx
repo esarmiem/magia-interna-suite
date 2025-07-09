@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { formatColombianPeso } from '@/lib/currency';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Sale = Tables<'sales'>;
@@ -111,8 +112,8 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
                     <TableCell>{item.products?.name || 'Producto no encontrado'}</TableCell>
                     <TableCell>{item.products?.sku || 'N/A'}</TableCell>
                     <TableCell>{item.quantity}</TableCell>
-                    <TableCell>€{item.unit_price.toFixed(2)}</TableCell>
-                    <TableCell>€{item.total_price.toFixed(2)}</TableCell>
+                    <TableCell>{formatColombianPeso(item.unit_price)}</TableCell>
+                    <TableCell>{formatColombianPeso(item.total_price)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -122,14 +123,14 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
           <div className="border-t pt-4">
             <div className="flex justify-end space-y-2">
               <div className="text-right space-y-1">
-                <p>Subtotal: €{(sale.total_amount + (sale.discount_amount || 0) - (sale.tax_amount || 0)).toFixed(2)}</p>
+                <p>Subtotal: {formatColombianPeso(sale.total_amount + (sale.discount_amount || 0) - (sale.tax_amount || 0))}</p>
                 {sale.discount_amount > 0 && (
-                  <p>Descuento: -€{sale.discount_amount.toFixed(2)}</p>
+                  <p>Descuento: -{formatColombianPeso(sale.discount_amount)}</p>
                 )}
                 {sale.tax_amount > 0 && (
-                  <p>Impuestos: €{sale.tax_amount.toFixed(2)}</p>
+                  <p>Impuestos: {formatColombianPeso(sale.tax_amount)}</p>
                 )}
-                <p className="text-lg font-bold">Total: €{sale.total_amount.toFixed(2)}</p>
+                <p className="text-lg font-bold">Total: {formatColombianPeso(sale.total_amount)}</p>
               </div>
             </div>
           </div>

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { formatColombianPeso, parseColombianPeso, formatInputForDisplay } from '@/lib/currency';
 
 interface Product {
   id: string;
@@ -52,8 +53,8 @@ export function ProductForm({ product, onClose, onSuccess }: ProductFormProps) {
       setFormData({
         name: product.name,
         description: product.description || '',
-        price: product.price.toString(),
-        cost: product.cost.toString(),
+        price: formatColombianPeso(product.price),
+        cost: formatColombianPeso(product.cost),
         sku: product.sku,
         category: product.category,
         size: product.size || '',
@@ -71,8 +72,8 @@ export function ProductForm({ product, onClose, onSuccess }: ProductFormProps) {
       const productData = {
         name: data.name,
         description: data.description || null,
-        price: parseFloat(data.price),
-        cost: parseFloat(data.cost),
+        price: parseColombianPeso(data.price),
+        cost: parseColombianPeso(data.cost),
         sku: data.sku,
         category: data.category,
         size: data.size || null,
@@ -119,10 +120,20 @@ export function ProductForm({ product, onClose, onSuccess }: ProductFormProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    
+    if (name === 'price' || name === 'cost') {
+      // Formatear campos de moneda
+      const formattedValue = formatInputForDisplay(value);
+      setFormData(prev => ({
+        ...prev,
+        [name]: formattedValue
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
   };
 
   return (
@@ -179,8 +190,8 @@ export function ProductForm({ product, onClose, onSuccess }: ProductFormProps) {
                 <Input
                   id="price"
                   name="price"
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  placeholder="Ej: 129.000"
                   value={formData.price}
                   onChange={handleChange}
                   required
@@ -192,8 +203,8 @@ export function ProductForm({ product, onClose, onSuccess }: ProductFormProps) {
                 <Input
                   id="cost"
                   name="cost"
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  placeholder="Ej: 89.000"
                   value={formData.cost}
                   onChange={handleChange}
                   required

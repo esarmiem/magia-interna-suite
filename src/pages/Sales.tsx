@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { SaleForm } from '@/components/sales/SaleForm';
 import { SaleDetails } from '@/components/sales/SaleDetails';
 import { useToast } from '@/hooks/use-toast';
+import { formatColombianPeso } from '@/lib/currency';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Sale = Tables<'sales'>;
@@ -153,7 +154,7 @@ export function Sales() {
                 <TableRow key={sale.id}>
                   <TableCell>{format(new Date(sale.sale_date), 'dd/MM/yyyy')}</TableCell>
                   <TableCell>{sale.customers?.name || 'Cliente Anónimo'}</TableCell>
-                  <TableCell>${sale.total_amount.toFixed(2)}</TableCell>
+                  <TableCell>{formatColombianPeso(sale.total_amount)}</TableCell>
                   <TableCell>{sale.payment_method}</TableCell>
                   <TableCell>
                     <Badge variant={sale.status === 'completed' ? 'default' : 'secondary'}>

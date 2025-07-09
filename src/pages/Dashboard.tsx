@@ -12,6 +12,7 @@ import { StatCard } from '@/components/ui/stat-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
+import { formatColombianPeso } from '@/lib/currency';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -40,8 +41,8 @@ export function Dashboard() {
     {
       title: 'Ventas del Día',
       value: dashboardData?.sales ? 
-        `$${dashboardData.sales.reduce((sum, sale) => sum + sale.total_amount, 0).toFixed(2)}` : 
-        '$0.00',
+        formatColombianPeso(dashboardData.sales.reduce((sum, sale) => sum + sale.total_amount, 0)) : 
+        formatColombianPeso(0),
       change: dashboardData?.sales?.length ? `+${dashboardData.sales.length} ventas` : 'Sin ventas',
       changeType: 'positive' as const,
       icon: DollarSign
@@ -65,8 +66,8 @@ export function Dashboard() {
     {
       title: 'Gastos del Día',
       value: dashboardData?.expenses ? 
-        `$${dashboardData.expenses.reduce((sum, expense) => sum + expense.amount, 0).toFixed(2)}` : 
-        '$0.00',
+        formatColombianPeso(dashboardData.expenses.reduce((sum, expense) => sum + expense.amount, 0)) : 
+        formatColombianPeso(0),
       change: dashboardData?.expenses?.length ? `${dashboardData.expenses.length} gastos` : 'Sin gastos',
       changeType: 'neutral' as const,
       icon: ShoppingCart

@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { CustomerForm } from '@/components/customers/CustomerForm';
 import { useToast } from '@/hooks/use-toast';
+import { formatColombianPeso } from '@/lib/currency';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Customer = Tables<'customers'>;
@@ -136,7 +137,7 @@ export function Customers() {
                       {customer.customer_type}
                     </Badge>
                   </TableCell>
-                  <TableCell>${customer.total_purchases?.toFixed(2) || '0.00'}</TableCell>
+                  <TableCell>{formatColombianPeso(customer.total_purchases || 0)}</TableCell>
                   <TableCell>
                     <Badge variant={customer.is_active ? 'default' : 'destructive'}>
                       {customer.is_active ? 'Activo' : 'Inactivo'}

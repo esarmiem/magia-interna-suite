@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { formatColombianPeso, parseColombianPeso, formatInputForDisplay } from '@/lib/currency';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Expense = Tables<'expenses'>;
@@ -30,21 +31,30 @@ export function ExpenseForm({ expense, onClose }: ExpenseFormProps) {
     receipt_url: expense?.receipt_url || '',
   });
 
+  const [displayAmount, setDisplayAmount] = useState(
+    expense ? formatColombianPeso(expense.amount) : ''
+  );
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      const expenseData = {
+        ...data,
+        amount: parseColombianPeso(displayAmount),
+      };
+
       if (expense) {
         const { error } = await supabase
           .from('expenses')
-          .update(data)
+          .update(expenseData)
           .eq('id', expense.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('expenses')
-          .insert(data);
+          .insert(expenseData);
         if (error) throw error;
       }
     },
@@ -71,7 +81,11 @@ export function ExpenseForm({ expense, onClose }: ExpenseFormProps) {
   };
 
   const handleChange = (field: string, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'amount') {
+      setDisplayAmount(value as string);
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const categories = [
@@ -110,11 +124,10 @@ export function ExpenseForm({ expense, onClose }: ExpenseFormProps) {
               <Label htmlFor="amount">Valor *</Label>
               <Input
                 id="amount"
-                type="number"
-                step="0"
-                min="0"
-                value={formData.amount}
-                onChange={(e) => handleChange('amount', parseFloat(e.target.value) || 0)}
+                type="text"
+                placeholder="Ej: 150.000"
+                value={displayAmount}
+                onChange={(e) => handleChange('amount', e.target.value)}
                 required
               />
             </div>
