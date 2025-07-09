@@ -12,7 +12,7 @@ import { StatCard } from '@/components/ui/stat-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
-import { formatColombianPeso } from '@/lib/currency';
+import { formatColombianPeso, getCurrentDateString } from '@/lib/currency';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export function Dashboard() {
         supabase.from('products').select('*'),
         supabase.from('customers').select('*'),
         supabase.from('sales').select('*, sale_items(*)').gte('sale_date', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
-        supabase.from('expenses').select('*').gte('expense_date', new Date().toISOString().split('T')[0])
+        supabase.from('expenses').select('*').eq('expense_date', getCurrentDateString())
       ]);
 
       return { products, customers, sales, expenses };

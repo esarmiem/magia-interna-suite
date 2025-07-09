@@ -54,4 +54,29 @@ export function formatInputForDisplay(value: string): string {
  */
 export function getNumericValue(formattedValue: string): number {
   return parseColombianPeso(formattedValue);
+}
+
+/**
+ * Obtiene la fecha actual en formato YYYY-MM-DD sin problemas de zona horaria
+ * @returns String en formato YYYY-MM-DD
+ */
+export function getCurrentDateString(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Convierte una fecha a formato YYYY-MM-DD sin problemas de zona horaria
+ * @param date - Fecha a convertir
+ * @returns String en formato YYYY-MM-DD
+ */
+export function formatDateForInput(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 } 

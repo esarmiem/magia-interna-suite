@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { formatColombianPeso, parseColombianPeso, formatInputForDisplay } from '@/lib/currency';
+import { formatColombianPeso, parseColombianPeso, formatInputForDisplay, getCurrentDateString, formatDateForInput } from '@/lib/currency';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Expense = Tables<'expenses'>;
@@ -26,7 +26,7 @@ export function ExpenseForm({ expense, onClose }: ExpenseFormProps) {
     amount: expense?.amount || 0,
     category: expense?.category || '',
     payment_method: expense?.payment_method || 'efectivo',
-    expense_date: expense?.expense_date || new Date().toISOString().split('T')[0],
+    expense_date: expense?.expense_date ? formatDateForInput(expense.expense_date) : getCurrentDateString(),
     notes: expense?.notes || '',
     receipt_url: expense?.receipt_url || '',
   });
