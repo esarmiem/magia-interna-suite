@@ -108,7 +108,7 @@ export function Expenses() {
             <CardTitle className="text-sm font-medium">Total de Gastos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€{totalExpenses.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${totalExpenses.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -117,7 +117,7 @@ export function Expenses() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              €{expenses
+              ${expenses
                 .filter(expense => new Date(expense.expense_date).getMonth() === new Date().getMonth())
                 .reduce((sum, expense) => sum + expense.amount, 0)
                 .toFixed(2)}
@@ -167,7 +167,7 @@ export function Expenses() {
                   <TableCell>
                     <Badge variant="outline">{expense.category}</Badge>
                   </TableCell>
-                  <TableCell>€{expense.amount.toFixed(2)}</TableCell>
+                  <TableCell>${expense.amount.toFixed(2)}</TableCell>
                   <TableCell>{expense.payment_method}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">

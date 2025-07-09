@@ -153,9 +153,9 @@ export function Analytics() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€{stats.totalSales.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${stats.totalSales.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
-              Beneficio: €{stats.profit.toFixed(2)}
+              Beneficio: ${stats.profit.toFixed(2)}
             </p>
           </CardContent>
         </Card>
@@ -206,7 +206,7 @@ export function Analytics() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Ventas']} />
+                <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Ventas']} />
                 <Line type="monotone" dataKey="ventas" stroke="#8884d8" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
@@ -223,7 +223,7 @@ export function Analytics() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="semana" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Ventas']} />
+                <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Ventas']} />
                 <Bar dataKey="ventas" fill="#82ca9d" />
               </BarChart>
             </ResponsiveContainer>
@@ -240,7 +240,7 @@ export function Analytics() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="dia" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Ventas']} />
+                <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Ventas']} />
                 <Line type="monotone" dataKey="ventas" stroke="#ff7300" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
@@ -284,7 +284,7 @@ export function Analytics() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="category" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Gastos']} />
+                <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Gastos']} />
                 <Bar dataKey="amount" fill="#82ca9d" />
               </BarChart>
             </ResponsiveContainer>

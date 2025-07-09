@@ -153,7 +153,7 @@ export function Sales() {
                 <TableRow key={sale.id}>
                   <TableCell>{format(new Date(sale.sale_date), 'dd/MM/yyyy')}</TableCell>
                   <TableCell>{sale.customers?.name || 'Cliente Anónimo'}</TableCell>
-                  <TableCell>€{sale.total_amount.toFixed(2)}</TableCell>
+                  <TableCell>${sale.total_amount.toFixed(2)}</TableCell>
                   <TableCell>{sale.payment_method}</TableCell>
                   <TableCell>
                     <Badge variant={sale.status === 'completed' ? 'default' : 'secondary'}>

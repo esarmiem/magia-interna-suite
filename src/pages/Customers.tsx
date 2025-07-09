@@ -136,7 +136,7 @@ export function Customers() {
                       {customer.customer_type}
                     </Badge>
                   </TableCell>
-                  <TableCell>€{customer.total_purchases?.toFixed(2) || '0.00'}</TableCell>
+                  <TableCell>${customer.total_purchases?.toFixed(2) || '0.00'}</TableCell>
                   <TableCell>
                     <Badge variant={customer.is_active ? 'default' : 'destructive'}>
                       {customer.is_active ? 'Activo' : 'Inactivo'}
