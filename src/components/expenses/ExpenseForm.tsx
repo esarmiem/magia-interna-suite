@@ -107,11 +107,11 @@ export function ExpenseForm({ expense, onClose }: ExpenseFormProps) {
             </div>
 
             <div>
-              <Label htmlFor="amount">Cantidad *</Label>
+              <Label htmlFor="amount">Valor *</Label>
               <Input
                 id="amount"
                 type="number"
-                step="0.01"
+                step="0"
                 min="0"
                 value={formData.amount}
                 onChange={(e) => handleChange('amount', parseFloat(e.target.value) || 0)}

@@ -154,7 +154,7 @@ export function Expenses() {
                 <TableHead>Fecha</TableHead>
                 <TableHead>Descripción</TableHead>
                 <TableHead>Categoría</TableHead>
-                <TableHead>Cantidad</TableHead>
+                <TableHead>Valor</TableHead>
                 <TableHead>Método de Pago</TableHead>
                 <TableHead>Acciones</TableHead>
               </TableRow>
