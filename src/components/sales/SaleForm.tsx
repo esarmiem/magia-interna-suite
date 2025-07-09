@@ -41,6 +41,10 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Buscar el cliente anónimo (activo o inactivo)
+  const [anonymousCustomer, setAnonymousCustomer] = useState<Customer | null>(null);
+
+  // Buscar todos los clientes activos para el selector
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
@@ -53,36 +57,62 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     },
   });
 
-  // Buscar el cliente anónimo
-  const anonymousCustomer = customers.find(c => c.name === 'Cliente Anónimo');
+  // Función para buscar o crear el cliente anónimo
+  const fetchOrCreateAnonymousCustomer = useCallback(async () => {
+    // Buscar cualquier cliente anónimo, activo o no
+    const { data: existing, error: findError } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('name', 'Cliente Anónimo')
+      .limit(1)
+      .maybeSingle();
 
-  // Función para crear el cliente anónimo si no existe
-  const createAnonymousCustomer = useCallback(async () => {
-    if (!anonymousCustomer) {
-      const { data, error } = await supabase
-        .from('customers')
-        .insert({
-          name: 'Cliente Anónimo',
-          customer_type: 'anonymous',
-          is_active: true
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error creating anonymous customer:', error);
-        return;
-      }
-      
-      // Invalidar la query para refrescar la lista de clientes
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    if (findError) {
+      console.error('Error searching for anonymous customer:', findError);
+      return;
     }
-  }, [anonymousCustomer, queryClient]);
 
-  // Crear cliente anónimo cuando se carga el componente
+    if (existing) {
+      // Si existe pero está inactivo, actívalo
+      if (!existing.is_active) {
+        const { error: updateError } = await supabase
+          .from('customers')
+          .update({ is_active: true })
+          .eq('id', existing.id);
+        if (updateError) {
+          console.error('Error reactivating anonymous customer:', updateError);
+          return;
+        }
+        queryClient.invalidateQueries({ queryKey: ['customers'] });
+        setAnonymousCustomer({ ...existing, is_active: true });
+      } else {
+        setAnonymousCustomer(existing);
+      }
+      return;
+    }
+
+    // Si no existe, créalo
+    const { data: created, error: createError } = await supabase
+      .from('customers')
+      .insert({
+        name: 'Cliente Anónimo',
+        customer_type: 'anonymous',
+        is_active: true
+      })
+      .select()
+      .single();
+    if (createError) {
+      console.error('Error creating anonymous customer:', createError);
+      return;
+    }
+    setAnonymousCustomer(created);
+    queryClient.invalidateQueries({ queryKey: ['customers'] });
+  }, [queryClient]);
+
+  // Ejecutar la función al cargar el componente
   useEffect(() => {
-    createAnonymousCustomer();
-  }, [createAnonymousCustomer]);
+    fetchOrCreateAnonymousCustomer();
+  }, [fetchOrCreateAnonymousCustomer]);
 
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
