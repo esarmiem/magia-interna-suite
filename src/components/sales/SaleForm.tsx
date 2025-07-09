@@ -321,6 +321,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                   id="discount_amount"
                   type="number"
                   step="0.01"
+                  min="0"
                   value={formData.discount_amount}
                   onChange={(e) => handleChange('discount_amount', parseFloat(e.target.value) || 0)}
                 />
@@ -332,6 +333,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                   id="tax_amount"
                   type="number"
                   step="0.01"
+                  min="0"
                   value={formData.tax_amount}
                   onChange={(e) => handleChange('tax_amount', parseFloat(e.target.value) || 0)}
                 />
