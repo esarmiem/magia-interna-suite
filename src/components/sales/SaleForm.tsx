@@ -124,6 +124,13 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     fetchOrCreateAnonymousCustomer();
   }, [fetchOrCreateAnonymousCustomer]);
 
+  // Cuando el cliente anónimo esté disponible y no haya cliente seleccionado, pon su UUID como valor por defecto
+  useEffect(() => {
+    if (anonymousCustomer && !formData.customer_id) {
+      setFormData(prev => ({ ...prev, customer_id: anonymousCustomer.id }));
+    }
+  }, [anonymousCustomer, formData.customer_id]);
+
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
@@ -355,12 +362,14 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="customer_id">Cliente</Label>
-                <Select value={formData.customer_id || "anonymous"} onValueChange={(value) => handleChange('customer_id', value)}>
+                <Select
+                  value={formData.customer_id}
+                  onValueChange={(value) => handleChange('customer_id', value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar cliente" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="anonymous">Cliente Anónimo</SelectItem>
                     {customers.map((customer) => (
                       <SelectItem key={customer.id} value={customer.id}>
                         {customer.name}
