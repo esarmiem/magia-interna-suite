@@ -355,7 +355,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
           <div className="flex items-center space-x-2">
             <CardTitle>{sale ? 'Editar Venta' : 'Nueva Venta'}</CardTitle>
             <img
-              src="/witch-broom.gif"
+              src="/witch-broom-transparent.gif"
               alt="Witch Broom"
               className="h-8 w-8 object-contain"
             />
