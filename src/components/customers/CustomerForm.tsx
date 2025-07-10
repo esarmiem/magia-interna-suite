@@ -69,6 +69,17 @@ export function CustomerForm({ customer, onClose }: CustomerFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar longitud del nombre
+    if (formData.name.length > 60) {
+      toast({
+        title: "Error de validación",
+        description: "El nombre no puede exceder los 60 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     mutation.mutate(formData);
   };
 
@@ -93,6 +104,7 @@ export function CustomerForm({ customer, onClose }: CustomerFormProps) {
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
+                maxLength={60}
                 required
               />
             </div>
