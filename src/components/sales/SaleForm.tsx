@@ -352,7 +352,14 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{sale ? 'Editar Venta' : 'Nueva Venta'}</CardTitle>
+          <div className="flex items-center space-x-2">
+            <CardTitle>{sale ? 'Editar Venta' : 'Nueva Venta'}</CardTitle>
+            <img
+              src="/witch-broom.gif"
+              alt="Witch Broom"
+              className="h-8 w-8 object-contain"
+            />
+          </div>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>

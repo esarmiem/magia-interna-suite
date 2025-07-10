@@ -142,7 +142,7 @@ export function Products() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <div className="flex items-center space-x-4">
           <img src="/flying-broom.png" alt="Flying Broom" className="w-12 h-12" />
           <div>
@@ -152,7 +152,7 @@ export function Products() {
             </p>
           </div>
         </div>
-        <Button onClick={() => setShowForm(true)} className="flex items-center space-x-2">
+        <Button onClick={() => setShowForm(true)} className="flex items-center space-x-2 mt-4 md:mt-0">
           <Plus className="w-4 h-4" />
           <span>Nuevo Producto</span>
         </Button>
