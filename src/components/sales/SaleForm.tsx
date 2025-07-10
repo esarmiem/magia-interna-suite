@@ -241,10 +241,10 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       }
     } else if (field === 'quantity' || field === 'unit_price') {
       if (field === 'quantity') {
-        updatedItems[index].quantity = value as number;
+        updatedItems[index].quantity = Math.max(1, value as number);
       } else {
-        updatedItems[index].unit_price = value as number;
-        updatedDisplayItems[index].unit_price = formatColombianPeso(value as number);
+        updatedItems[index].unit_price = Math.max(0, value as number);
+        updatedDisplayItems[index].unit_price = formatColombianPeso(Math.max(0, value as number));
       }
       updatedItems[index].total_price = updatedItems[index].quantity * updatedItems[index].unit_price;
       updatedDisplayItems[index].total_price = formatColombianPeso(updatedItems[index].total_price);
@@ -259,7 +259,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     const updatedItems = [...saleItems];
 
     if (field === 'unit_price') {
-      const numericValue = parseColombianPeso(value);
+      const numericValue = Math.max(0, parseColombianPeso(value));
       updatedItems[index].unit_price = numericValue;
       updatedItems[index].total_price = updatedItems[index].quantity * numericValue;
       updatedDisplayItems[index].unit_price = value;
@@ -309,8 +309,17 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
   const handleChange = (field: string, value: string | number) => {
     if (field === 'discount_amount' || field === 'tax_amount') {
       const numericValue = typeof value === 'string' ? parseColombianPeso(value) : value;
-      setFormData(prev => ({ ...prev, [field]: numericValue }));
-      setDisplayData(prev => ({ ...prev, [field]: typeof value === 'string' ? value : formatColombianPeso(value) }));
+      
+      // Prevenir valores negativos
+      const validatedValue = Math.max(0, numericValue);
+      
+      setFormData(prev => ({ ...prev, [field]: validatedValue }));
+      setDisplayData(prev => ({ 
+        ...prev, 
+        [field]: typeof value === 'string' 
+          ? (validatedValue === 0 ? '' : formatColombianPeso(validatedValue))
+          : formatColombianPeso(validatedValue)
+      }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
     }
