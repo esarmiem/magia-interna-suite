@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -23,11 +22,30 @@ const navigation = [
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
 
-// { name: 'Configuración', href: '/configuracion', icon: Settings },
+// Función para detectar si es mobile o tablet
+const isMobileOrTablet = () => {
+  if (typeof window === 'undefined') return false;
+  return window.innerWidth < 1024; // lg breakpoint de Tailwind
+};
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  // Estado inicial basado en el tamaño de pantalla
+  const [collapsed, setCollapsed] = useState(() => isMobileOrTablet());
   const location = useLocation();
+
+  // Efecto para manejar cambios de tamaño de pantalla
+  useEffect(() => {
+    const handleResize = () => {
+      const shouldCollapse = isMobileOrTablet();
+      setCollapsed(shouldCollapse);
+    };
+
+    // Agregar listener para resize
+    window.addEventListener('resize', handleResize);
+    
+    // Limpiar listener al desmontar
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className={cn(

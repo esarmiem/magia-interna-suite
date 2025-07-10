@@ -124,6 +124,13 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     fetchOrCreateAnonymousCustomer();
   }, [fetchOrCreateAnonymousCustomer]);
 
+  // Cuando el cliente anónimo esté disponible y no haya cliente seleccionado, pon su UUID como valor por defecto
+  useEffect(() => {
+    if (anonymousCustomer && !formData.customer_id) {
+      setFormData(prev => ({ ...prev, customer_id: anonymousCustomer.id }));
+    }
+  }, [anonymousCustomer, formData.customer_id]);
+
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
@@ -241,10 +248,10 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       }
     } else if (field === 'quantity' || field === 'unit_price') {
       if (field === 'quantity') {
-        updatedItems[index].quantity = value as number;
+        updatedItems[index].quantity = Math.max(1, value as number);
       } else {
-        updatedItems[index].unit_price = value as number;
-        updatedDisplayItems[index].unit_price = formatColombianPeso(value as number);
+        updatedItems[index].unit_price = Math.max(0, value as number);
+        updatedDisplayItems[index].unit_price = formatColombianPeso(Math.max(0, value as number));
       }
       updatedItems[index].total_price = updatedItems[index].quantity * updatedItems[index].unit_price;
       updatedDisplayItems[index].total_price = formatColombianPeso(updatedItems[index].total_price);
@@ -259,7 +266,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     const updatedItems = [...saleItems];
 
     if (field === 'unit_price') {
-      const numericValue = parseColombianPeso(value);
+      const numericValue = Math.max(0, parseColombianPeso(value));
       updatedItems[index].unit_price = numericValue;
       updatedItems[index].total_price = updatedItems[index].quantity * numericValue;
       updatedDisplayItems[index].unit_price = value;
@@ -309,8 +316,17 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
   const handleChange = (field: string, value: string | number) => {
     if (field === 'discount_amount' || field === 'tax_amount') {
       const numericValue = typeof value === 'string' ? parseColombianPeso(value) : value;
-      setFormData(prev => ({ ...prev, [field]: numericValue }));
-      setDisplayData(prev => ({ ...prev, [field]: typeof value === 'string' ? value : formatColombianPeso(value) }));
+      
+      // Prevenir valores negativos
+      const validatedValue = Math.max(0, numericValue);
+      
+      setFormData(prev => ({ ...prev, [field]: validatedValue }));
+      setDisplayData(prev => ({ 
+        ...prev, 
+        [field]: typeof value === 'string' 
+          ? (validatedValue === 0 ? '' : formatColombianPeso(validatedValue))
+          : formatColombianPeso(validatedValue)
+      }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
     }
@@ -346,12 +362,14 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="customer_id">Cliente</Label>
-                <Select value={formData.customer_id || "anonymous"} onValueChange={(value) => handleChange('customer_id', value)}>
+                <Select
+                  value={formData.customer_id}
+                  onValueChange={(value) => handleChange('customer_id', value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar cliente" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="anonymous">Cliente Anónimo</SelectItem>
                     {customers.map((customer) => (
                       <SelectItem key={customer.id} value={customer.id}>
                         {customer.name}
