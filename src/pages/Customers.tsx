@@ -133,7 +133,7 @@ export function Customers() {
                   <TableCell>{customer.email || 'N/A'}</TableCell>
                   <TableCell>{customer.phone || 'N/A'}</TableCell>
                   <TableCell>
-                    <Badge variant={customer.customer_type === 'premium' ? 'default' : 'secondary'}>
+                    <Badge variant={customer.customer_type === 'vip' ? 'default' : 'secondary'}>
                       {customer.customer_type}
                     </Badge>
                   </TableCell>
