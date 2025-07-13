@@ -1,11 +1,13 @@
 
-import { Bell, Search, Moon, Sun } from 'lucide-react';
+import { Bell, Search, Moon, Sun, LogOut } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useTheme } from './ThemeProvider';
+import { useAuth } from '../hooks/useAuth';
 
 export function Header() {
   const { theme, setTheme } = useTheme();
+  const { logout } = useAuth();
 
   return (
     <header className="border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
@@ -30,6 +32,16 @@ export function Header() {
             className="text-muted-foreground hover:text-foreground"
           >
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={logout}
+            className="text-muted-foreground hover:text-red-600 transition-colors"
+            title="Cerrar sesión"
+          >
+            <LogOut size={18} />
           </Button>
           
           {/* <Button
