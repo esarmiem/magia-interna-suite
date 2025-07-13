@@ -8,7 +8,8 @@ import {
   Edit, 
   Trash2, 
   Filter,
-  AlertTriangle 
+  AlertTriangle,
+  Eye
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ import {
 } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { ProductForm } from '@/components/products/ProductForm';
+import { ProductDetails } from '@/components/products/ProductDetails';
 import { toast } from '@/hooks/use-toast';
 import { formatColombianPeso } from '@/lib/currency';
 
@@ -50,6 +52,7 @@ export function Products() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const queryClient = useQueryClient();
 
   // Fetch products
@@ -107,8 +110,12 @@ export function Products() {
     setShowForm(true);
   };
 
+  const handleView = (product: Product) => {
+    setViewingProduct(product);
+  };
+
   const handleDelete = (id: string) => {
-    if (confirm('¿Está seguro de que desea eliminar este producto?')) {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
       deleteProductMutation.mutate(id);
     }
   };
@@ -116,6 +123,10 @@ export function Products() {
   const handleFormClose = () => {
     setShowForm(false);
     setEditingProduct(null);
+  };
+
+  const handleCloseDetails = () => {
+    setViewingProduct(null);
   };
 
   if (isLoading) {
@@ -290,6 +301,13 @@ export function Products() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => handleView(product)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleEdit(product)}
                       >
                         <Edit className="w-4 h-4" />
@@ -333,6 +351,14 @@ export function Products() {
             queryClient.invalidateQueries({ queryKey: ['products'] });
             handleFormClose();
           }}
+        />
+      )}
+
+      {/* Product Details Modal */}
+      {viewingProduct && (
+        <ProductDetails
+          product={viewingProduct}
+          onClose={handleCloseDetails}
         />
       )}
     </div>

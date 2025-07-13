@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { CustomerForm } from '@/components/customers/CustomerForm';
+import { CustomerDetails } from '@/components/customers/CustomerDetails';
 import { useToast } from '@/hooks/use-toast';
 import { formatColombianPeso } from '@/lib/currency';
 import type { Tables } from '@/integrations/supabase/types';
@@ -19,6 +20,7 @@ export function Customers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [viewingCustomer, setViewingCustomer] = useState<Customer | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -70,6 +72,10 @@ export function Customers() {
     setShowForm(true);
   };
 
+  const handleView = (customer: Customer) => {
+    setViewingCustomer(customer);
+  };
+
   const handleDelete = (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
       deleteMutation.mutate(id);
@@ -79,6 +85,10 @@ export function Customers() {
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingCustomer(null);
+  };
+
+  const handleCloseDetails = () => {
+    setViewingCustomer(null);
   };
 
   if (isLoading) {
@@ -148,6 +158,13 @@ export function Customers() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => handleView(customer)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleEdit(customer)}
                       >
                         <Edit className="h-4 w-4" />
@@ -172,6 +189,13 @@ export function Customers() {
         <CustomerForm
           customer={editingCustomer}
           onClose={handleCloseForm}
+        />
+      )}
+
+      {viewingCustomer && (
+        <CustomerDetails
+          customer={viewingCustomer}
+          onClose={handleCloseDetails}
         />
       )}
     </div>

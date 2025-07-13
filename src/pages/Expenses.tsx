@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
+import { ExpenseDetails } from '@/components/expenses/ExpenseDetails';
 import { useToast } from '@/hooks/use-toast';
 import { formatColombianPeso } from '@/lib/currency';
 import type { Tables } from '@/integrations/supabase/types';
@@ -20,6 +21,7 @@ export function Expenses() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -71,6 +73,10 @@ export function Expenses() {
     setShowForm(true);
   };
 
+  const handleView = (expense: Expense) => {
+    setViewingExpense(expense);
+  };
+
   const handleDelete = (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este gasto?')) {
       deleteMutation.mutate(id);
@@ -80,6 +86,10 @@ export function Expenses() {
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingExpense(null);
+  };
+
+  const handleCloseDetails = () => {
+    setViewingExpense(null);
   };
 
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -175,6 +185,13 @@ export function Expenses() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => handleView(expense)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleEdit(expense)}
                       >
                         <Edit className="h-4 w-4" />
@@ -199,6 +216,13 @@ export function Expenses() {
         <ExpenseForm
           expense={editingExpense}
           onClose={handleCloseForm}
+        />
+      )}
+
+      {viewingExpense && (
+        <ExpenseDetails
+          expense={viewingExpense}
+          onClose={handleCloseDetails}
         />
       )}
     </div>
