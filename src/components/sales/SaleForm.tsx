@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatColombianPeso, parseColombianPeso, formatInputForDisplay } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
+import confetti from 'canvas-confetti';
 
 type Sale = Tables<'sales'>;
 type Product = Tables<'products'>;
@@ -55,6 +56,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
   // Estados para los buscadores
   const [customerOpen, setCustomerOpen] = useState(false);
   const [productOpens, setProductOpens] = useState<boolean[]>([]);
+  const [customerSearch, setCustomerSearch] = useState('');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -68,12 +70,17 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('customers')
-        .select('id, name')
+        .select('id, name, document_number, document_type')
         .eq('is_active', true);
       if (error) throw error;
       return data;
     },
   });
+
+  const filteredCustomers = customers.filter((customer: Customer) =>
+    customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+    (customer.document_number && customer.document_number.toLowerCase().includes(customerSearch.toLowerCase()))
+  );
 
   // Función para buscar o crear el cliente anónimo
   const fetchOrCreateAnonymousCustomer = useCallback(async () => {
@@ -151,10 +158,11 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     },
   });
 
-  // Función para obtener el nombre del cliente seleccionado
-  const getSelectedCustomerName = () => {
-    const selectedCustomer = customers.find(c => c.id === formData.customer_id);
-    return selectedCustomer?.name || '';
+  // Función para obtener el nombre y documento del cliente seleccionado
+  const getSelectedCustomerDisplay = () => {
+    const selectedCustomer = customers.find((c: Customer) => c.id === formData.customer_id);
+    if (!selectedCustomer) return '';
+    return `${selectedCustomer.name} ${selectedCustomer.document_number ? `(${selectedCustomer.document_number})` : ''}`;
   };
 
   // Función para manejar el estado de apertura de productos
@@ -211,6 +219,14 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       }
     },
     onSuccess: () => {
+      // Lanzar confeti solo si es una nueva venta
+      if (!sale) {
+        confetti({
+          particleCount: 120,
+          spread: 80,
+          origin: { y: 0.7 },
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -408,7 +424,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                       aria-expanded={customerOpen}
                       className="w-full justify-between"
                     >
-                      {getSelectedCustomerName() || "Seleccionar cliente..."}
+                      {getSelectedCustomerDisplay() || "Seleccionar cliente..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
@@ -418,10 +434,10 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                       <CommandList>
                         <CommandEmpty>No se encontraron clientes.</CommandEmpty>
                         <CommandGroup>
-                          {customers.map((customer) => (
+                          {filteredCustomers.map((customer: Customer) => (
                             <CommandItem
                               key={customer.id}
-                              value={customer.name}
+                              value={customer.name + (customer.document_number ? ' ' + customer.document_number : '')}
                               onSelect={() => {
                                 handleChange('customer_id', customer.id);
                                 setCustomerOpen(false);
@@ -433,7 +449,12 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                                   formData.customer_id === customer.id ? 'opacity-100' : 'opacity-0'
                                 )}
                               />
-                              {customer.name}
+                              <div className="flex flex-col">
+                                <span className="font-medium">{customer.name}</span>
+                                <span className="text-xs text-gray-500">
+                                  {customer.document_type ? customer.document_type + ': ' : ''}{customer.document_number || 'Sin documento'}
+                                </span>
+                              </div>
                             </CommandItem>
                           ))}
                         </CommandGroup>
