@@ -50,6 +50,14 @@ export function CustomerDetails({ customer, onClose }: CustomerDetailsProps) {
                     }
                   </p>
                 </div>
+                <div>
+                  <span className="font-medium text-gray-700">Tipo de Documento:</span>
+                  <p className="text-gray-900">{customer.document_type || 'No especificado'}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700">Número de Documento:</span>
+                  <p className="text-gray-900">{customer.document_number || 'No especificado'}</p>
+                </div>
               </div>
               <div className="space-y-2">
                 <div>

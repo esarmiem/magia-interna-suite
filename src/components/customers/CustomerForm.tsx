@@ -30,6 +30,8 @@ export function CustomerForm({ customer, onClose }: CustomerFormProps) {
     birth_date: customer?.birth_date || '',
     customer_type: customer?.customer_type || 'regular',
     is_active: customer?.is_active ?? true,
+    document_type: customer?.document_type || '',
+    document_number: customer?.document_number || '',
   });
 
   const { toast } = useToast();
@@ -177,6 +179,31 @@ export function CustomerForm({ customer, onClose }: CustomerFormProps) {
                   <SelectItem value="vip">VIP</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="document_type">Tipo de Documento</Label>
+              <Select value={formData.document_type} onValueChange={(value) => handleChange('document_type', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CC">Cédula de Ciudadanía</SelectItem>
+                  <SelectItem value="CE">Cédula de Extranjería</SelectItem>
+                  <SelectItem value="NIT">NIT</SelectItem>
+                  <SelectItem value="PAS">Pasaporte</SelectItem>
+                  <SelectItem value="OTRO">Otro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="document_number">Número de Documento</Label>
+              <Input
+                id="document_number"
+                value={formData.document_number}
+                onChange={(e) => handleChange('document_number', e.target.value)}
+                required
+              />
             </div>
 
             <div className="flex items-center space-x-2">

@@ -30,6 +30,8 @@ export type Database = {
           postal_code: string | null
           total_purchases: number | null
           updated_at: string
+          document_type: string | null,
+          document_number: string | null,
         }
         Insert: {
           address?: string | null
@@ -46,6 +48,8 @@ export type Database = {
           postal_code?: string | null
           total_purchases?: number | null
           updated_at?: string
+          document_type?: string | null,
+          document_number?: string | null,
         }
         Update: {
           address?: string | null
@@ -62,6 +66,8 @@ export type Database = {
           postal_code?: string | null
           total_purchases?: number | null
           updated_at?: string
+          document_type?: string | null,
+          document_number?: string | null,
         }
         Relationships: []
       }

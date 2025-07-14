@@ -112,6 +112,8 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
                       {customer.customer_type}
                     </Badge>
                   </div>
+                  <div><strong>Tipo de Documento:</strong> {customer.document_type || 'N/A'}</div>
+                  <div><strong>Número de Documento:</strong> {customer.document_number || 'N/A'}</div>
                 </div>
               ) : (
                 <p>Cliente Anónimo</p>

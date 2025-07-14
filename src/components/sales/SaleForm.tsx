@@ -55,6 +55,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
   // Estados para los buscadores
   const [customerOpen, setCustomerOpen] = useState(false);
   const [productOpens, setProductOpens] = useState<boolean[]>([]);
+  const [customerSearch, setCustomerSearch] = useState('');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -68,12 +69,17 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('customers')
-        .select('id, name')
+        .select('id, name, document_number, document_type')
         .eq('is_active', true);
       if (error) throw error;
       return data;
     },
   });
+
+  const filteredCustomers = customers.filter((customer: any) =>
+    customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+    (customer.document_number && customer.document_number.toLowerCase().includes(customerSearch.toLowerCase()))
+  );
 
   // Función para buscar o crear el cliente anónimo
   const fetchOrCreateAnonymousCustomer = useCallback(async () => {
@@ -418,7 +424,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                       <CommandList>
                         <CommandEmpty>No se encontraron clientes.</CommandEmpty>
                         <CommandGroup>
-                          {customers.map((customer) => (
+                          {filteredCustomers.map((customer) => (
                             <CommandItem
                               key={customer.id}
                               value={customer.name}
