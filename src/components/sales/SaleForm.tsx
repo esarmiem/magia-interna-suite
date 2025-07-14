@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatColombianPeso, parseColombianPeso, formatInputForDisplay } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
+import confetti from 'canvas-confetti';
 
 type Sale = Tables<'sales'>;
 type Product = Tables<'products'>;
@@ -218,6 +219,14 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       }
     },
     onSuccess: () => {
+      // Lanzar confeti solo si es una nueva venta
+      if (!sale) {
+        confetti({
+          particleCount: 120,
+          spread: 80,
+          origin: { y: 0.7 },
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
