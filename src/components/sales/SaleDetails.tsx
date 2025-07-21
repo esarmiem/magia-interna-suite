@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { X, FileDown } from 'lucide-react';
 import { format } from 'date-fns';
@@ -6,7 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { formatColombianPeso } from '@/lib/currency';
 import type { Tables } from '@/integrations/supabase/types';
 import { useRef, useState } from 'react';

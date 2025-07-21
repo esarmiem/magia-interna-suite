@@ -64,6 +64,7 @@ export function Customers() {
 
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (customer.document_number && customer.document_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -131,6 +132,8 @@ export function Customers() {
                 <TableHead>Email</TableHead>
                 <TableHead>Teléfono</TableHead>
                 <TableHead>Tipo</TableHead>
+                <TableHead>Tipo Doc</TableHead>
+                <TableHead>Número Doc</TableHead>
                 <TableHead>Compras Totales</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Acciones</TableHead>
@@ -147,6 +150,8 @@ export function Customers() {
                       {customer.customer_type}
                     </Badge>
                   </TableCell>
+                  <TableCell>{customer.document_type || 'N/A'}</TableCell>
+                  <TableCell>{customer.document_number || 'N/A'}</TableCell>
                   <TableCell>{formatColombianPeso(customer.total_purchases || 0)}</TableCell>
                   <TableCell>
                     <Badge variant={customer.is_active ? 'default' : 'destructive'}>

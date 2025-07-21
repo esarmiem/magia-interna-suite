@@ -1,16 +1,20 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { X, Plus, Trash2, AlertTriangle, Search, Check, ChevronsUpDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { formatColombianPeso, parseColombianPeso, formatInputForDisplay } from '@/lib/currency';
+import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
+import confetti from 'canvas-confetti';
 
 type Sale = Tables<'sales'>;
 type Product = Tables<'products'>;
@@ -48,6 +52,12 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     unit_price: string;
     total_price: string;
   }>>([]);
+  
+  // Estados para los buscadores
+  const [customerOpen, setCustomerOpen] = useState(false);
+  const [productOpens, setProductOpens] = useState<boolean[]>([]);
+  const [customerSearch, setCustomerSearch] = useState('');
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -60,12 +70,17 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('customers')
-        .select('id, name')
+        .select('id, name, document_number, document_type')
         .eq('is_active', true);
       if (error) throw error;
       return data;
     },
   });
+
+  const filteredCustomers = customers.filter((customer: Customer) =>
+    customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+    (customer.document_number && customer.document_number.toLowerCase().includes(customerSearch.toLowerCase()))
+  );
 
   // Función para buscar o crear el cliente anónimo
   const fetchOrCreateAnonymousCustomer = useCallback(async () => {
@@ -136,12 +151,34 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price, stock_quantity')
+        .select('id, name, price, stock_quantity, sku, size')
         .eq('is_active', true);
       if (error) throw error;
       return data;
     },
   });
+
+  // Función para obtener el nombre y documento del cliente seleccionado
+  const getSelectedCustomerDisplay = () => {
+    const selectedCustomer = customers.find((c: Customer) => c.id === formData.customer_id);
+    if (!selectedCustomer) return '';
+    return `${selectedCustomer.name} ${selectedCustomer.document_number ? `(${selectedCustomer.document_number})` : ''}`;
+  };
+
+  // Función para manejar el estado de apertura de productos
+  const handleProductOpenChange = (index: number, open: boolean) => {
+    const newOpens = [...productOpens];
+    newOpens[index] = open;
+    setProductOpens(newOpens);
+  };
+
+  // Inicializar el array de estados de apertura de productos
+  useEffect(() => {
+    if (productOpens.length !== saleItems.length) {
+      const newOpens = new Array(saleItems.length).fill(false);
+      setProductOpens(newOpens);
+    }
+  }, [saleItems.length, productOpens.length]);
 
   const mutation = useMutation({
     mutationFn: async (data: { saleData: typeof formData; items: SaleItem[] }) => {
@@ -182,6 +219,14 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       }
     },
     onSuccess: () => {
+      // Lanzar confeti solo si es una nueva venta
+      if (!sale) {
+        confetti({
+          particleCount: 120,
+          spread: 80,
+          origin: { y: 0.7 },
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -224,11 +269,13 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       unit_price: '',
       total_price: '',
     }]);
+    setProductOpens([...productOpens, false]); // Add a new open state for the new item
   };
 
   const removeSaleItem = (index: number) => {
     setSaleItems(saleItems.filter((_, i) => i !== index));
     setDisplayItems(displayItems.filter((_, i) => i !== index));
+    setProductOpens(productOpens.filter((_, i) => i !== index)); // Remove the open state
   };
 
   const updateSaleItem = (index: number, field: keyof SaleItem, value: string | number) => {
@@ -369,21 +416,52 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="customer_id">Cliente</Label>
-                <Select
-                  value={formData.customer_id}
-                  onValueChange={(value) => handleChange('customer_id', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar cliente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customers.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={customerOpen}
+                      className="w-full justify-between"
+                    >
+                      {getSelectedCustomerDisplay() || "Seleccionar cliente..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Buscar cliente..." />
+                      <CommandList>
+                        <CommandEmpty>No se encontraron clientes.</CommandEmpty>
+                        <CommandGroup>
+                          {filteredCustomers.map((customer: Customer) => (
+                            <CommandItem
+                              key={customer.id}
+                              value={customer.name + (customer.document_number ? ' ' + customer.document_number : '')}
+                              onSelect={() => {
+                                handleChange('customer_id', customer.id);
+                                setCustomerOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4',
+                                  formData.customer_id === customer.id ? 'opacity-100' : 'opacity-0'
+                                )}
+                              />
+                              <div className="flex flex-col">
+                                <span className="font-medium">{customer.name}</span>
+                                <span className="text-xs text-gray-500">
+                                  {customer.document_type ? customer.document_type + ': ' : ''}{customer.document_number || 'Sin documento'}
+                                </span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div>
@@ -415,23 +493,59 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                 const insufficientStock = hasInsufficientStock(item);
                 
                 return (
-                  <div key={index} className="grid grid-cols-6 gap-2 mb-2 items-end border p-3 rounded-lg">
-                    <div>
+                  <div key={index} className="flex flex-wrap items-end gap-2 mb-2 border p-3 rounded-lg">
+                    <div className="w-full sm:flex-[2_1_0%] sm:min-w-0">
                       <Label>Producto</Label>
-                      <Select value={item.product_id} onValueChange={(value) => updateSaleItem(index, 'product_id', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {products.map((product) => (
-                            <SelectItem key={product.id} value={product.id}>
-                              {product.name} (Stock: {product.stock_quantity})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover open={productOpens[index]} onOpenChange={(open) => handleProductOpenChange(index, open)}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={productOpens[index]}
+                            className="w-full justify-between min-w-0 max-w-full truncate"
+                          >
+                            <span className="block truncate text-left min-w-0 max-w-[180px] overflow-hidden text-ellipsis">
+                              {product ? `${product.name} (${product.sku})` : "Seleccionar producto..."}
+                            </span>
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput placeholder="Buscar producto por nombre o SKU..." />
+                            <CommandList>
+                              <CommandEmpty>No se encontraron productos.</CommandEmpty>
+                              <CommandGroup>
+                                {products.map((product) => (
+                                  <CommandItem
+                                    key={product.id}
+                                    value={`${product.name} ${product.sku}`}
+                                    onSelect={() => {
+                                      updateSaleItem(index, 'product_id', product.id);
+                                      handleProductOpenChange(index, false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        'mr-2 h-4 w-4',
+                                        item.product_id === product.id ? 'opacity-100' : 'opacity-0'
+                                      )}
+                                    />
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{product.name}</span>
+                                      <span className="text-xs text-gray-500">
+                                        SKU: {product.sku} • Talla: {product.size || 'N/A'} • Stock: {product.stock_quantity}
+                                      </span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </div>
-                    <div>
+                    <div className="w-16">
                       <Label>Cantidad</Label>
                       <Input
                         type="number"
@@ -447,15 +561,15 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                         </div>
                       )}
                     </div>
-                    <div>
-                      <Label>Stock Disp.</Label>
+                    <div className="w-16">
+                      <Label>Stock</Label>
                       <Input
                         value={product ? product.stock_quantity : '-'}
                         readOnly
-                        className="bg-gray-50"
+                        className=""
                       />
                     </div>
-                    <div>
+                    <div className="w-28">
                       <Label>Precio Unit.</Label>
                       <Input
                         type="text"
@@ -464,23 +578,25 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                         onChange={(e) => updateDisplayItem(index, 'unit_price', e.target.value)}
                       />
                     </div>
-                    <div>
+                    <div className="w-28">
                       <Label>Total</Label>
                       <Input
                         type="text"
                         value={displayItems[index]?.total_price || ''}
                         readOnly
-                        className="bg-gray-50"
+                        className=""
                       />
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeSaleItem(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="w-10 flex-shrink-0 flex justify-end items-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeSaleItem(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 );
               })}

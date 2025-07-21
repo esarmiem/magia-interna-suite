@@ -1,6 +1,6 @@
 # Magia Interna Suite
 
-<img width="1502" alt="image" src="https://github.com/user-attachments/assets/70c513ed-a194-4e80-bf8d-e1d9d6bcde85" />
+https://github.com/user-attachments/assets/a35b77c7-78f0-48f1-bbee-04ed5e342e1c
 
 ## Descripción del Proyecto
 
