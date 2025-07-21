@@ -95,10 +95,18 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Contenido a exportar */}
-          <div ref={contentRef} className="p-8 rounded-lg">
+          <div ref={contentRef} className="p-2 rounded-lg">
             {/* Sección 1: Información del Cliente */}
             <div>
-              <img src="/magiainternalogo.webp" alt="Logo" width={60} height={60} className="object-contain" />
+              <img src="/magiainternalogo.webp" alt="Logo" width={78} height={78} className="object-contain" />
+              <div className="mb-3">
+                <h4 className="text-lg font-semibold">Remitente</h4>
+                <div className="grid grid-cols-2 gap-x-8 gap-y-1">
+                  <div><strong>Nombre:</strong> Magia Interna</div>
+                  <div><strong>Nit:</strong> 1100974413-1</div>
+                  <div><strong>Celular:</strong> 3214930228</div>
+                </div>
+              </div>
               <h3 className="text-lg font-semibold mb-3">Información del Cliente</h3>
               {customer ? (
                 <div className="grid grid-cols-2 gap-x-8 gap-y-2">
@@ -107,11 +115,7 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
                   <div><strong>Dirección:</strong> {customer.address || 'N/A'}</div>
                   <div><strong>Ciudad:</strong> {customer.city || 'N/A'}</div>
                   <div><strong>Email:</strong> {customer.email || 'N/A'}</div>
-                  <div><strong>Tipo:</strong> 
-                    <Badge variant={customer.customer_type === 'premium' ? 'default' : 'secondary'} className="ml-2">
-                      {customer.customer_type}
-                    </Badge>
-                  </div>
+                  <div><strong>Tipo:</strong> {customer.customer_type}</div>
                 </div>
               ) : (
                 <p>Cliente Anónimo</p>
@@ -124,11 +128,7 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
               <div className="grid grid-cols-3 gap-x-8 gap-y-2 mb-6">
                 <div><strong>Fecha:</strong> {format(new Date(sale.sale_date), 'dd/MM/yyyy HH:mm')}</div>
                 <div><strong>Método de Pago:</strong> {sale.payment_method}</div>
-                <div><strong>Estado:</strong> 
-                  <Badge variant={sale.status === 'completed' ? 'default' : 'secondary'} className="ml-2">
-                    {sale.status}
-                  </Badge>
-                </div>
+                <div><strong>Estado:</strong> {sale.status === 'completed' ? 'Completado' : sale.status}</div>
               </div>
               <h3 className="text-lg font-semibold mb-2">Productos</h3>
               <Table>
@@ -155,7 +155,7 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
               </Table>
               <div className="border-t pt-4 mt-4">
                 <div className="flex justify-end space-y-2">
-                  <div className="text-right space-y-1">
+                  <div className="text-right space-y-1 mr-8">
                     <p>Subtotal: {formatColombianPeso(sale.total_amount + (sale.discount_amount || 0) - (sale.tax_amount || 0))}</p>
                     {sale.discount_amount > 0 && (
                       <p>Descuento: -{formatColombianPeso(sale.discount_amount)}</p>
