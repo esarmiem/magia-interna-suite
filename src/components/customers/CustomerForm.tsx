@@ -69,6 +69,18 @@ export function CustomerForm({ customer, onClose }: CustomerFormProps) {
     },
   });
 
+  const prepareData = (data: typeof formData) => ({
+    ...data,
+    email: data.email.trim() === '' ? null : data.email,
+    phone: data.phone.trim() === '' ? null : data.phone,
+    address: data.address.trim() === '' ? null : data.address,
+    city: data.city.trim() === '' ? null : data.city,
+    postal_code: data.postal_code.trim() === '' ? null : data.postal_code,
+    birth_date: data.birth_date.trim() === '' ? null : data.birth_date,
+    document_type: data.document_type.trim() === '' ? null : data.document_type,
+    // name y document_number se mantienen porque son obligatorios
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -82,7 +94,7 @@ export function CustomerForm({ customer, onClose }: CustomerFormProps) {
       return;
     }
     
-    mutation.mutate(formData);
+    mutation.mutate(prepareData(formData));
   };
 
   const handleChange = (field: string, value: string | boolean) => {
