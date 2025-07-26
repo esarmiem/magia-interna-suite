@@ -10,6 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
   Pagination,
   PaginationContent,
   PaginationItem,
@@ -34,6 +42,8 @@ export function Sales() {
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -70,6 +80,8 @@ export function Sales() {
         title: "Venta eliminada",
         description: "La venta ha sido eliminada exitosamente y el inventario ha sido restaurado.",
       });
+      setShowDeleteDialog(false);
+      setSaleToDelete(null);
     },
     onError: () => {
       toast({
@@ -77,6 +89,8 @@ export function Sales() {
         description: "No se pudo eliminar la venta.",
         variant: "destructive",
       });
+      setShowDeleteDialog(false);
+      setSaleToDelete(null);
     },
   });
 
@@ -96,10 +110,9 @@ export function Sales() {
     setShowForm(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta venta?')) {
-      deleteMutation.mutate(id);
-    }
+  const handleDelete = (sale: Sale) => {
+    setSaleToDelete(sale);
+    setShowDeleteDialog(true);
   };
 
   const handleViewDetails = (sale: Sale) => {
@@ -206,7 +219,7 @@ export function Sales() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDelete(sale.id)}
+                        onClick={() => handleDelete(sale)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -271,6 +284,33 @@ export function Sales() {
           onClose={handleCloseDetails}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Estás seguro?</DialogTitle>
+            <DialogDescription>
+              Esta acción no se puede deshacer. Esto eliminará permanentemente la venta.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (saleToDelete) {
+                  deleteMutation.mutate(saleToDelete.id);
+                }
+              }}
+            >
+              Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

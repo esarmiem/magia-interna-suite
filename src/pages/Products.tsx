@@ -24,6 +24,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
   Pagination,
   PaginationContent,
   PaginationItem,
@@ -64,6 +72,8 @@ export function Products() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const queryClient = useQueryClient();
 
   // Fetch products
@@ -96,6 +106,8 @@ export function Products() {
         title: "Producto eliminado",
         description: "El producto ha sido eliminado exitosamente.",
       });
+      setShowDeleteDialog(false);
+      setProductToDelete(null);
     },
     onError: (error) => {
       toast({
@@ -103,6 +115,8 @@ export function Products() {
         description: "No se pudo eliminar el producto. " + error.message,
         variant: "destructive",
       });
+      setShowDeleteDialog(false);
+      setProductToDelete(null);
     },
   });
 
@@ -131,10 +145,9 @@ export function Products() {
     setViewingProduct(product);
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-      deleteProductMutation.mutate(id);
-    }
+  const handleDelete = (product: Product) => {
+    setProductToDelete(product);
+    setShowDeleteDialog(true);
   };
 
   const handleFormClose = () => {
@@ -344,7 +357,7 @@ export function Products() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(product.id)}
+                        onClick={() => handleDelete(product)}
                         className="text-red-600 hover:text-red-700"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -430,6 +443,33 @@ export function Products() {
           onClose={handleCloseDetails}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Estás seguro?</DialogTitle>
+            <DialogDescription>
+              Esta acción no se puede deshacer. Esto eliminará permanentemente el producto.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (productToDelete) {
+                  deleteProductMutation.mutate(productToDelete.id);
+                }
+              }}
+            >
+              Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

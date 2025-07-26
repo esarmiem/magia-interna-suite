@@ -10,6 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
   Pagination,
   PaginationContent,
   PaginationItem,
@@ -33,6 +41,8 @@ export function Expenses() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -64,6 +74,8 @@ export function Expenses() {
         title: "Gasto eliminado",
         description: "El gasto ha sido eliminado exitosamente.",
       });
+      setShowDeleteDialog(false);
+      setExpenseToDelete(null);
     },
     onError: () => {
       toast({
@@ -71,6 +83,8 @@ export function Expenses() {
         description: "No se pudo eliminar el gasto.",
         variant: "destructive",
       });
+      setShowDeleteDialog(false);
+      setExpenseToDelete(null);
     },
   });
 
@@ -94,10 +108,9 @@ export function Expenses() {
     setViewingExpense(expense);
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este gasto?')) {
-      deleteMutation.mutate(id);
-    }
+  const handleDelete = (expense: Expense) => {
+    setExpenseToDelete(expense);
+    setShowDeleteDialog(true);
   };
 
   const handleCloseForm = () => {
@@ -225,7 +238,7 @@ export function Expenses() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDelete(expense.id)}
+                        onClick={() => handleDelete(expense)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -290,6 +303,33 @@ export function Expenses() {
           onClose={handleCloseDetails}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Estás seguro?</DialogTitle>
+            <DialogDescription>
+              Esta acción no se puede deshacer. Esto eliminará permanentemente el gasto.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (expenseToDelete) {
+                  deleteMutation.mutate(expenseToDelete.id);
+                }
+              }}
+            >
+              Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
