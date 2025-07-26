@@ -23,6 +23,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { supabase } from '@/integrations/supabase/client';
 import { ProductForm } from '@/components/products/ProductForm';
 import { ProductDetails } from '@/components/products/ProductDetails';
@@ -47,12 +55,15 @@ interface Product {
   updated_at: string;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export function Products() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
 
   // Fetch products
@@ -102,6 +113,12 @@ export function Products() {
     return matchesSearch && matchesCategory;
   }) || [];
 
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const categories = [...new Set(products?.map(p => p.category) || [])];
   const lowStockProducts = products?.filter(p => p.stock_quantity <= p.min_stock) || [];
 
@@ -127,6 +144,12 @@ export function Products() {
 
   const handleCloseDetails = () => {
     setViewingProduct(null);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
 
   if (isLoading) {
@@ -229,13 +252,19 @@ export function Products() {
               <Input
                 placeholder="Buscar por nombre o SKU..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="pl-10"
               />
             </div>
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setCurrentPage(1);
+              }}
               className="px-3 py-2 border border-input rounded-md bg-background"
             >
               <option value="">Todas las categorías</option>
@@ -266,7 +295,7 @@ export function Products() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProducts.map((product) => (
+              {paginatedProducts.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell>
                     <div>
@@ -341,6 +370,46 @@ export function Products() {
           )}
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage - 1);
+                }}
+              />
+            </PaginationItem>
+            {[...Array(totalPages)].map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  href="#"
+                  isActive={currentPage === i + 1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(i + 1);
+                  }}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage + 1);
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       {/* Product Form Modal */}
       {showForm && (

@@ -8,6 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { CustomerForm } from '@/components/customers/CustomerForm';
 import { CustomerDetails } from '@/components/customers/CustomerDetails';
 import { useToast } from '@/hooks/use-toast';
@@ -16,11 +24,14 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Customer = Tables<'customers'>;
 
+const ITEMS_PER_PAGE = 10;
+
 export function Customers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [viewingCustomer, setViewingCustomer] = useState<Customer | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -68,6 +79,12 @@ export function Customers() {
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredCustomers.length / ITEMS_PER_PAGE);
+  const paginatedCustomers = filteredCustomers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const handleEdit = (customer: Customer) => {
     setEditingCustomer(customer);
     setShowForm(true);
@@ -90,6 +107,12 @@ export function Customers() {
 
   const handleCloseDetails = () => {
     setViewingCustomer(null);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
 
   if (isLoading) {
@@ -119,7 +142,10 @@ export function Customers() {
             <Input
               placeholder="Buscar por nombre o email..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="max-w-sm"
             />
           </div>
@@ -140,7 +166,7 @@ export function Customers() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCustomers.map((customer) => (
+              {paginatedCustomers.map((customer) => (
                 <TableRow key={customer.id}>
                   <TableCell className="font-medium">{customer.name}</TableCell>
                   <TableCell>{customer.email || 'N/A'}</TableCell>
@@ -189,6 +215,45 @@ export function Customers() {
           </Table>
         </CardContent>
       </Card>
+
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage - 1);
+                }}
+              />
+            </PaginationItem>
+            {[...Array(totalPages)].map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  href="#"
+                  isActive={currentPage === i + 1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(i + 1);
+                  }}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage + 1);
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       {showForm && (
         <CustomerForm

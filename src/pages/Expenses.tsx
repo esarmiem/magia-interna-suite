@@ -9,6 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
 import { ExpenseDetails } from '@/components/expenses/ExpenseDetails';
 import { useToast } from '@/hooks/use-toast';
@@ -17,11 +25,14 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Expense = Tables<'expenses'>;
 
+const ITEMS_PER_PAGE = 10;
+
 export function Expenses() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -68,6 +79,12 @@ export function Expenses() {
     expense.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredExpenses.length / ITEMS_PER_PAGE);
+  const paginatedExpenses = filteredExpenses.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const handleEdit = (expense: Expense) => {
     setEditingExpense(expense);
     setShowForm(true);
@@ -90,6 +107,12 @@ export function Expenses() {
 
   const handleCloseDetails = () => {
     setViewingExpense(null);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
 
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -153,7 +176,10 @@ export function Expenses() {
             <Input
               placeholder="Buscar por descripción o categoría..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="max-w-sm"
             />
           </div>
@@ -171,7 +197,7 @@ export function Expenses() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredExpenses.map((expense) => (
+              {paginatedExpenses.map((expense) => (
                 <TableRow key={expense.id}>
                   <TableCell>{format(new Date(expense.expense_date), 'dd/MM/yyyy')}</TableCell>
                   <TableCell className="font-medium">{expense.description}</TableCell>
@@ -211,6 +237,45 @@ export function Expenses() {
           </Table>
         </CardContent>
       </Card>
+
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage - 1);
+                }}
+              />
+            </PaginationItem>
+            {[...Array(totalPages)].map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  href="#"
+                  isActive={currentPage === i + 1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(i + 1);
+                  }}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage + 1);
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       {showForm && (
         <ExpenseForm

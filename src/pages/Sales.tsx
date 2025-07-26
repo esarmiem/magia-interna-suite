@@ -9,6 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { SaleForm } from '@/components/sales/SaleForm';
 import { SaleDetails } from '@/components/sales/SaleDetails';
 import { useToast } from '@/hooks/use-toast';
@@ -17,12 +25,15 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Sale = Tables<'sales'>;
 
+const ITEMS_PER_PAGE = 10;
+
 export function Sales() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -74,6 +85,12 @@ export function Sales() {
     sale.payment_method.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredSales.length / ITEMS_PER_PAGE);
+  const paginatedSales = filteredSales.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const handleEdit = (sale: Sale) => {
     setEditingSale(sale);
     setShowForm(true);
@@ -105,6 +122,12 @@ export function Sales() {
     setShowForm(true);
   };
 
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-64">Cargando...</div>;
   }
@@ -132,7 +155,10 @@ export function Sales() {
             <Input
               placeholder="Buscar por cliente o método de pago..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="max-w-sm"
             />
           </div>
@@ -150,7 +176,7 @@ export function Sales() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSales.map((sale) => (
+              {paginatedSales.map((sale) => (
                 <TableRow key={sale.id}>
                   <TableCell>{format(new Date(sale.sale_date), 'dd/MM/yyyy')}</TableCell>
                   <TableCell>{sale.customers?.name || 'Cliente Anónimo'}</TableCell>
@@ -192,6 +218,45 @@ export function Sales() {
           </Table>
         </CardContent>
       </Card>
+
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage - 1);
+                }}
+              />
+            </PaginationItem>
+            {[...Array(totalPages)].map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  href="#"
+                  isActive={currentPage === i + 1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(i + 1);
+                  }}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage + 1);
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       {showForm && (
         <SaleForm
