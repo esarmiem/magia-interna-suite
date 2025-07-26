@@ -8,6 +8,22 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { CustomerForm } from '@/components/customers/CustomerForm';
 import { CustomerDetails } from '@/components/customers/CustomerDetails';
 import { useToast } from '@/hooks/use-toast';
@@ -16,11 +32,16 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Customer = Tables<'customers'>;
 
+const ITEMS_PER_PAGE = 10;
+
 export function Customers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [viewingCustomer, setViewingCustomer] = useState<Customer | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -52,6 +73,8 @@ export function Customers() {
         title: "Cliente eliminado",
         description: "El cliente ha sido eliminado exitosamente.",
       });
+      setShowDeleteDialog(false);
+      setCustomerToDelete(null);
     },
     onError: () => {
       toast({
@@ -59,6 +82,8 @@ export function Customers() {
         description: "No se pudo eliminar el cliente.",
         variant: "destructive",
       });
+      setShowDeleteDialog(false);
+      setCustomerToDelete(null);
     },
   });
 
@@ -66,6 +91,12 @@ export function Customers() {
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (customer.document_number && customer.document_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredCustomers.length / ITEMS_PER_PAGE);
+  const paginatedCustomers = filteredCustomers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
   );
 
   const handleEdit = (customer: Customer) => {
@@ -77,10 +108,9 @@ export function Customers() {
     setViewingCustomer(customer);
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
-      deleteMutation.mutate(id);
-    }
+  const handleDelete = (customer: Customer) => {
+    setCustomerToDelete(customer);
+    setShowDeleteDialog(true);
   };
 
   const handleCloseForm = () => {
@@ -90,6 +120,12 @@ export function Customers() {
 
   const handleCloseDetails = () => {
     setViewingCustomer(null);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
 
   if (isLoading) {
@@ -119,7 +155,10 @@ export function Customers() {
             <Input
               placeholder="Buscar por nombre o email..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="max-w-sm"
             />
           </div>
@@ -140,7 +179,7 @@ export function Customers() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCustomers.map((customer) => (
+              {paginatedCustomers.map((customer) => (
                 <TableRow key={customer.id}>
                   <TableCell className="font-medium">{customer.name}</TableCell>
                   <TableCell>{customer.email || 'N/A'}</TableCell>
@@ -177,7 +216,7 @@ export function Customers() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDelete(customer.id)}
+                        onClick={() => handleDelete(customer)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -189,6 +228,45 @@ export function Customers() {
           </Table>
         </CardContent>
       </Card>
+
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage - 1);
+                }}
+              />
+            </PaginationItem>
+            {[...Array(totalPages)].map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  href="#"
+                  isActive={currentPage === i + 1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(i + 1);
+                  }}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage + 1);
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       {showForm && (
         <CustomerForm
@@ -203,6 +281,33 @@ export function Customers() {
           onClose={handleCloseDetails}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Estás seguro?</DialogTitle>
+            <DialogDescription>
+              Esta acción no se puede deshacer. Esto eliminará permanentemente el cliente.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (customerToDelete) {
+                  deleteMutation.mutate(customerToDelete.id);
+                }
+              }}
+            >
+              Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
