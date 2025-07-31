@@ -38,6 +38,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     payment_method: sale?.payment_method || 'efectivo',
     discount_amount: sale?.discount_amount || 0,
     tax_amount: sale?.tax_amount || 0,
+    delivery_fee: sale?.delivery_fee || 0,
     notes: sale?.notes || '',
     status: sale?.status || 'completed',
   });
@@ -45,6 +46,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
   const [displayData, setDisplayData] = useState({
     discount_amount: formatColombianPeso(sale?.discount_amount || 0),
     tax_amount: formatColombianPeso(sale?.tax_amount || 0),
+    delivery_fee: formatColombianPeso(sale?.delivery_fee || 0),
   });
 
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
@@ -183,7 +185,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
   const mutation = useMutation({
     mutationFn: async (data: { saleData: typeof formData; items: SaleItem[] }) => {
       const totalAmount = data.items.reduce((sum, item) => sum + item.total_price, 0) 
-        + data.saleData.tax_amount - data.saleData.discount_amount;
+        + data.saleData.tax_amount - data.saleData.discount_amount + data.saleData.delivery_fee;
 
       // Si se seleccionó cliente anónimo, usar su ID
       let customerId = data.saleData.customer_id;
@@ -361,7 +363,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
   };
 
   const handleChange = (field: string, value: string | number) => {
-    if (field === 'discount_amount' || field === 'tax_amount') {
+    if (field === 'discount_amount' || field === 'tax_amount' || field === 'delivery_fee') {
       const numericValue = typeof value === 'string' ? parseColombianPeso(value) : value;
       
       // Prevenir valores negativos
@@ -380,7 +382,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
   };
 
   const subtotal = saleItems.reduce((sum, item) => sum + item.total_price, 0);
-  const total = subtotal + formData.tax_amount - formData.discount_amount;
+  const total = subtotal + formData.tax_amount - formData.discount_amount + formData.delivery_fee;
 
   // Función para obtener el stock disponible de un producto
   const getProductStock = (productId: string) => {
@@ -628,12 +630,24 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
               </div>
 
               <div>
-                <Label>Total Final</Label>
+                <Label htmlFor="delivery_fee">Envío</Label>
                 <Input
-                  value={formatColombianPeso(total)}
-                  readOnly
+                  id="delivery_fee"
+                  type="text"
+                  placeholder="Ej: 5.000"
+                  min="0"
+                  value={displayData.delivery_fee}
+                  onChange={(e) => handleChange('delivery_fee', e.target.value)}
                 />
               </div>
+            </div>
+
+            <div>
+              <Label>Total Final</Label>
+              <Input
+                value={formatColombianPeso(total)}
+                readOnly
+              />
             </div>
 
             <div>

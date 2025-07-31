@@ -154,12 +154,15 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
               <div className="border-t pt-4 mt-4">
                 <div className="flex justify-end space-y-2">
                   <div className="text-right space-y-1 mr-8">
-                    <p>Subtotal: {formatColombianPeso(sale.total_amount + (sale.discount_amount || 0) - (sale.tax_amount || 0))}</p>
+                    <p>Subtotal: {formatColombianPeso(sale.total_amount + (sale.discount_amount || 0) - (sale.tax_amount || 0) - (sale.delivery_fee || 0))}</p>
                     {sale.discount_amount > 0 && (
                       <p>Descuento: -{formatColombianPeso(sale.discount_amount)}</p>
                     )}
                     {sale.tax_amount > 0 && (
                       <p>Impuestos: {formatColombianPeso(sale.tax_amount)}</p>
+                    )}
+                    {sale.delivery_fee > 0 && (
+                      <p>Domicilio: {formatColombianPeso(sale.delivery_fee)}</p>
                     )}
                     <p className="text-lg font-bold">Total: {formatColombianPeso(sale.total_amount)}</p>
                   </div>
