@@ -19,6 +19,7 @@ export function Analytics() {
             sale_date, 
             discount_amount, 
             tax_amount,
+            delivery_fee,
             sale_items (
               quantity,
               unit_price,
@@ -48,7 +49,8 @@ export function Analytics() {
         const totalRevenue = sale.total_amount;
         const discount = sale.discount_amount || 0;
         const tax = sale.tax_amount || 0;
-        const profit = totalRevenue - totalCost - discount - tax;
+        const deliveryFee = sale.delivery_fee || 0;
+        const profit = totalRevenue - totalCost - discount - tax - deliveryFee;
         
         return {
           ...sale,
@@ -56,6 +58,7 @@ export function Analytics() {
           totalRevenue,
           discount,
           tax,
+          deliveryFee,
           profit
         };
       });
@@ -65,6 +68,7 @@ export function Analytics() {
       const totalCosts = salesWithProfits.reduce((sum, sale) => sum + sale.totalCost, 0);
       const totalDiscounts = salesWithProfits.reduce((sum, sale) => sum + sale.discount, 0);
       const totalTaxes = salesWithProfits.reduce((sum, sale) => sum + sale.tax, 0);
+      const totalDeliveryFees = salesWithProfits.reduce((sum, sale) => sum + sale.deliveryFee, 0);
       const totalProfit = salesWithProfits.reduce((sum, sale) => sum + sale.profit, 0);
       const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
       const totalProducts = products.length;
@@ -177,6 +181,7 @@ export function Analytics() {
         totalCosts,
         totalDiscounts,
         totalTaxes,
+        totalDeliveryFees,
         totalProfit,
         totalExpenses,
         totalProducts,

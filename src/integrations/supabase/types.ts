@@ -21,17 +21,17 @@ export type Database = {
           city: string | null
           created_at: string
           customer_type: string | null
+          document_number: string | null
+          document_type: string | null
           email: string | null
           id: string
           is_active: boolean
           last_purchase_date: string | null
-          name: string
+          name: string | null
           phone: string | null
           postal_code: string | null
           total_purchases: number | null
           updated_at: string
-          document_type: string | null,
-          document_number: string | null,
         }
         Insert: {
           address?: string | null
@@ -39,17 +39,17 @@ export type Database = {
           city?: string | null
           created_at?: string
           customer_type?: string | null
+          document_number?: string | null
+          document_type?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
           last_purchase_date?: string | null
-          name: string
+          name?: string | null
           phone?: string | null
           postal_code?: string | null
           total_purchases?: number | null
           updated_at?: string
-          document_type?: string | null,
-          document_number?: string | null,
         }
         Update: {
           address?: string | null
@@ -57,17 +57,17 @@ export type Database = {
           city?: string | null
           created_at?: string
           customer_type?: string | null
+          document_number?: string | null
+          document_type?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
           last_purchase_date?: string | null
-          name?: string
+          name?: string | null
           phone?: string | null
           postal_code?: string | null
           total_purchases?: number | null
           updated_at?: string
-          document_type?: string | null,
-          document_number?: string | null,
         }
         Relationships: []
       }
@@ -213,6 +213,7 @@ export type Database = {
         Row: {
           created_at: string
           customer_id: string | null
+          delivery_fee: number | null
           discount_amount: number | null
           id: string
           notes: string | null
@@ -225,6 +226,7 @@ export type Database = {
         Insert: {
           created_at?: string
           customer_id?: string | null
+          delivery_fee?: number | null
           discount_amount?: number | null
           id?: string
           notes?: string | null
@@ -237,6 +239,7 @@ export type Database = {
         Update: {
           created_at?: string
           customer_id?: string | null
+          delivery_fee?: number | null
           discount_amount?: number | null
           id?: string
           notes?: string | null
@@ -264,7 +267,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "client"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -391,6 +394,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["admin", "client"],
+    },
   },
 } as const
