@@ -213,7 +213,7 @@ ${customer.email ? `Email: ${customer.email}` : 'Sin email'}
         </div>
       </div>
 
-      {/* Notificaciones - Siempre visible */}
+      {/* Notificaciones - Siempre visible 
       <Card className="border-2 border-magia-warning bg-magia-warning/5">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -304,7 +304,7 @@ ${customer.email ? `Email: ${customer.email}` : 'Sin email'}
             </div>
           )}
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
