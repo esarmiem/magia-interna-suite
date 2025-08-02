@@ -123,7 +123,7 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
             {/* Sección 2: Información de la Venta y Productos */}
             <div className="mt-6">
               <h3 className="text-lg font-semibold mb-3">Información de la Venta</h3>
-              <div className="grid grid-cols-3 gap-x-8 gap-y-2 mb-6">
+              <div className="grid grid-cols-3 gap-x-2 gap-y-2 mb-6">
                 <div><strong>Fecha:</strong> {format(new Date(sale.sale_date), 'dd/MM/yyyy HH:mm')}</div>
                 <div><strong>Método de Pago:</strong> {sale.payment_method}</div>
                 <div><strong>Estado:</strong> {sale.status === 'completed' ? 'Completado' : sale.status}</div>
@@ -133,7 +133,7 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Producto</TableHead>
-                    <TableHead>SKU</TableHead>
+                    {/*<TableHead>SKU</TableHead>*/}
                     <TableHead>Cantidad</TableHead>
                     <TableHead>Precio Unit.</TableHead>
                     <TableHead>Total</TableHead>
@@ -143,7 +143,7 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
                   {saleItems.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell>{item.products?.name || 'Producto no encontrado'}</TableCell>
-                      <TableCell>{item.products?.sku || 'N/A'}</TableCell>
+                      {/*<TableCell>{item.products?.sku || 'N/A'}</TableCell>*/}
                       <TableCell>{item.quantity}</TableCell>
                       <TableCell>{formatColombianPeso(item.unit_price)}</TableCell>
                       <TableCell>{formatColombianPeso(item.total_price)}</TableCell>
@@ -152,8 +152,8 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
                 </TableBody>
               </Table>
               <div className="border-t pt-4 mt-4">
-                <div className="flex justify-end space-y-2">
-                  <div className="text-right space-y-1 mr-8">
+                <div className="flex justify-start space-y-2">
+                  <div className="text-left space-y-1 mr-8">
                     <p>Subtotal: {formatColombianPeso(sale.total_amount + (sale.discount_amount || 0) - (sale.tax_amount || 0) - (sale.delivery_fee || 0))}</p>
                     {sale.discount_amount > 0 && (
                       <p>Descuento: -{formatColombianPeso(sale.discount_amount)}</p>
