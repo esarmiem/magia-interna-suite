@@ -9,7 +9,8 @@ import {
   BarChart3,
   Settings,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +21,7 @@ const navigation = [
   { name: 'Ventas', href: '/ventas', icon: ShoppingCart },
   { name: 'Gastos', href: '/gastos', icon: FileText },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Cumpleaños', href: '/cumpleanos', icon: Calendar },
 ];
 
 // Función para detectar si es mobile o tablet
