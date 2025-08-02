@@ -1,14 +1,48 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, TrendingUp, Users, Package, DollarSign, ShoppingCart, TrendingDown } from 'lucide-react';
+import { Calendar, TrendingUp, Users, Package, DollarSign, ShoppingCart, TrendingDown, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, ComposedChart, Area } from 'recharts';
 import { formatColombianPeso } from '@/lib/currency';
+import { useRef, useState } from 'react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function Analytics() {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [selectedYear, setSelectedYear] = useState(2025);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async (type: 'pdf' | 'png') => {
+    if (!contentRef.current) return;
+    setDownloading(true);
+    try {
+      // Oculta los botones antes de capturar
+      const buttons = contentRef.current.querySelectorAll('.no-export');
+      buttons.forEach(btn => (btn as HTMLElement).style.display = 'none');
+      const canvas = await html2canvas(contentRef.current, { scale: 2 });
+      buttons.forEach(btn => (btn as HTMLElement).style.display = '');
+      if (type === 'png') {
+        const link = document.createElement('a');
+        link.download = `ganancias-mensuales-${selectedYear}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } else {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width, canvas.height] });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(`ganancias-mensuales-${selectedYear}.pdf`);
+      }
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const { data: stats, isLoading } = useQuery({
-    queryKey: ['analytics-stats'],
+    queryKey: ['analytics-stats', selectedYear],
     queryFn: async () => {
       // Obtener ventas con items y productos para calcular ganancias reales
       const [salesResult, productsResult, customersResult, expensesResult] = await Promise.all([
@@ -28,10 +62,14 @@ export function Analytics() {
                 cost
               )
             )
-          `),
+          `)
+          .gte('sale_date', `${selectedYear}-01-01`)
+          .lte('sale_date', `${selectedYear}-12-31`),
         supabase.from('products').select('stock_quantity, category, price, cost'),
         supabase.from('customers').select('customer_type, total_purchases'),
         supabase.from('expenses').select('amount, category, expense_date')
+          .gte('expense_date', `${selectedYear}-01-01`)
+          .lte('expense_date', `${selectedYear}-12-31`)
       ]);
 
       const sales = salesResult.data || [];
@@ -75,7 +113,12 @@ export function Analytics() {
       const totalCustomers = customers.length;
       const lowStockProducts = products.filter(p => p.stock_quantity <= 5).length;
 
-      // Ganancia por mes
+      // Ganancia por mes para el año seleccionado
+      const months = [
+        'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+        'jul', 'ago', 'sep', 'oct', 'nov', 'dic'
+      ];
+
       const profitByMonth = salesWithProfits.reduce((acc: Record<string, { revenue: number; cost: number; profit: number }>, sale) => {
         const month = new Date(sale.sale_date).toLocaleDateString('es-ES', { month: 'short' });
         if (!acc[month]) {
@@ -87,12 +130,16 @@ export function Analytics() {
         return acc;
       }, {});
 
-      const monthlyData = Object.entries(profitByMonth).map(([month, data]) => ({
-        month,
-        ingresos: data.revenue,
-        costos: data.cost,
-        ganancia: data.profit
-      }));
+      // Crear datos mensuales completos para el año seleccionado
+      const monthlyData = months.map(month => {
+        const monthData = profitByMonth[month] || { revenue: 0, cost: 0, profit: 0 };
+        return {
+          month: month.charAt(0).toUpperCase() + month.slice(1), // Capitalizar primera letra
+          ingresos: monthData.revenue,
+          costos: monthData.cost,
+          ganancia: monthData.profit
+        };
+      });
 
       // Ganancia por semana
       const profitByWeek = salesWithProfits.reduce((acc: Record<string, { revenue: number; cost: number; profit: number }>, sale) => {
@@ -274,6 +321,85 @@ export function Analytics() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Análisis de Ganancias Mensuales */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+            <div>
+              <CardTitle className="text-xl sm:text-2xl font-bold text-gray-800">Ganancias</CardTitle>
+              <div className="flex items-center space-x-2 mt-2">
+                <label className="text-sm font-medium">Año</label>
+                <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+                  <SelectTrigger className="w-24 sm:w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 6 }, (_, i) => 2025 - i).map(year => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleDownload('png')}
+                disabled={downloading}
+                className="no-export text-xs sm:text-sm"
+              >
+                <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Exportar como PNG</span>
+                <span className="sm:hidden">PNG</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleDownload('pdf')}
+                disabled={downloading}
+                className="no-export text-xs sm:text-sm"
+              >
+                <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Exportar como PDF</span>
+                <span className="sm:hidden">PDF</span>
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div ref={contentRef} className="p-4">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">Ganancias Mensuales</h3>
+              <div className="text-3xl font-bold text-gray-800 mb-1">
+                {formatColombianPeso(stats?.monthlyData.reduce((sum, month) => sum + month.ganancia, 0) || 0)}
+              </div>
+              <p className="text-sm text-blue-600">
+                Este Año +{Math.round(((stats?.monthlyData.reduce((sum, month) => sum + month.ganancia, 0) || 0) / 
+                  (stats?.monthlyData.reduce((sum, month) => sum + month.ingresos, 0) || 1)) * 100)}%
+              </p>
+            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={stats?.monthlyData || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value, name) => [
+                    formatColombianPeso(Number(value)), 
+                    name === 'ingresos' ? 'Ingresos' : 
+                    name === 'costos' ? 'Costos' : 'Ganancia'
+                  ]} 
+                />
+                <Bar dataKey="ganancia" fill="#3b82f6" name="ganancia" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Gráficos de Ganancia */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

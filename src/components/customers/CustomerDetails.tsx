@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatColombianPeso } from '@/lib/currency';
+import { formatBirthDate } from '@/lib/date-utils';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Customer = Tables<'customers'>;
@@ -44,10 +45,7 @@ export function CustomerDetails({ customer, onClose }: CustomerDetailsProps) {
                 <div>
                   <span className="font-medium text-gray-700">Fecha de Nacimiento:</span>
                   <p className="text-gray-900">
-                    {customer.birth_date 
-                      ? format(new Date(customer.birth_date), 'dd/MM/yyyy')
-                      : 'No especificada'
-                    }
+                    {formatBirthDate(customer.birth_date)}
                   </p>
                 </div>
                 <div>
