@@ -414,6 +414,7 @@ ${customer.email ? `Email: ${customer.email}` : 'Sin email'}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {birthdaysByMonth.map((monthData) => {
             const isCurrentMonth = monthData.monthNumber === currentMonth;
+            const hasMoreCustomers = monthData.customers.length > 6;
             
             return (
               <Card 
@@ -437,43 +438,55 @@ ${customer.email ? `Email: ${customer.email}` : 'Sin email'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {monthData.customers.map((customer) => {
-                    const age = calculateAge(customer.birth_date);
-                    const birthDate = new Date(customer.birth_date);
-                    const daysUntil = getDaysUntilBirthday(customer.birth_date);
-                    
-                    return (
-                      <div 
-                        key={customer.id}
-                        className="flex items-center space-x-3 p-2 rounded-lg hover:bg-accent transition-colors"
-                      >
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="text-xs bg-gradient-to-br from-magia-purple to-magia-gold text-white">
-                            {customer.name.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{customer.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {birthDate.getDate()} • {age} años
-                          </p>
-                        </div>
-                        {customer.customer_type !== 'regular' && (
-                          <Badge variant="outline" className="text-xs">
-                            {customer.customer_type.toUpperCase()}
-                          </Badge>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => sendWhatsAppNotification(customer, daysUntil)}
-                          className="h-6 w-6 p-0 bg-green-600 hover:bg-green-700 text-white"
+                  <div className={cn(
+                    "space-y-3",
+                    hasMoreCustomers && "max-h-80 overflow-y-auto pr-2"
+                  )}>
+                    {monthData.customers.map((customer) => {
+                      const age = calculateAge(customer.birth_date);
+                      const birthDate = new Date(customer.birth_date);
+                      const daysUntil = getDaysUntilBirthday(customer.birth_date);
+                      
+                      return (
+                        <div 
+                          key={customer.id}
+                          className="flex items-center space-x-3 p-2 rounded-lg hover:bg-accent transition-colors"
                         >
-                          <MessageCircle className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    );
-                  })}
+                          <Avatar className="h-8 w-8 flex-shrink-0">
+                            <AvatarFallback className="text-xs bg-gradient-to-br from-magia-purple to-magia-gold text-white">
+                              {customer.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{customer.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {birthDate.getDate()} • {age} años
+                            </p>
+                          </div>
+                          {customer.customer_type !== 'regular' && (
+                            <Badge variant="outline" className="text-xs flex-shrink-0">
+                              {customer.customer_type.toUpperCase()}
+                            </Badge>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => sendWhatsAppNotification(customer, daysUntil)}
+                            className="h-6 w-6 p-0 bg-green-600 hover:bg-green-700 text-white flex-shrink-0"
+                          >
+                            <MessageCircle className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {hasMoreCustomers && (
+                    <div className="pt-2 border-t border-border">
+                      <p className="text-xs text-muted-foreground text-center">
+                        +{monthData.customers.length - 6} más clientes
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
