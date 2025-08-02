@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { formatBirthDateForInput } from '@/lib/date-utils';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Customer = Tables<'customers'>;
@@ -27,7 +28,7 @@ export function CustomerForm({ customer, onClose }: CustomerFormProps) {
     address: customer?.address || '',
     city: customer?.city || '',
     postal_code: customer?.postal_code || '',
-    birth_date: customer?.birth_date || '',
+    birth_date: formatBirthDateForInput(customer?.birth_date),
     customer_type: customer?.customer_type || 'regular',
     is_active: customer?.is_active ?? true,
     document_type: customer?.document_type || '',

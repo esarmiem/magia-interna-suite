@@ -1,10 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Gift, Users, Clock } from 'lucide-react';
+import { Calendar, Gift, Users, Clock, MessageCircle, Bell } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { calculateAge, getDaysUntilBirthday } from '@/lib/date-utils';
 
 type Customer = {
   id: string;
@@ -21,7 +24,16 @@ type BirthdayByMonth = {
   customers: Customer[];
 };
 
+type NotificationStatus = {
+  customerId: string;
+  notificationDate: string;
+  type: 'week' | 'day';
+  sent: boolean;
+};
+
 export function Birthdays() {
+  const { toast } = useToast();
+  
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['customers-birthdays'],
     queryFn: async () => {
@@ -45,32 +57,88 @@ export function Birthdays() {
     return months[monthNumber - 1];
   };
 
-  // Función para calcular la edad
-  const calculateAge = (birthDate: string) => {
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    
-    return age;
+  // Función para enviar notificación por WhatsApp
+  const sendWhatsAppNotification = (customer: Customer, daysUntil: number) => {
+    const age = calculateAge(customer.birth_date);
+    const birthDate = new Date(customer.birth_date);
+    const formattedDate = birthDate.toLocaleDateString('es-ES', { 
+      day: 'numeric', 
+      month: 'long' 
+    });
+
+    const message = `🎉 *Recordatorio de Cumpleaños - Magia Interna*
+
+👤 *Cliente:* ${customer.name}
+📅 *Fecha de cumpleaños:* ${formattedDate}
+🎂 *Edad:* ${age} años
+⏰ *Faltan:* ${daysUntil} días
+
+💝 *Acción requerida:*
+• Enviar promoción especial
+• Preparar tarjeta de regalo
+• Contactar al cliente
+
+📞 *Contacto del cliente:*
+${customer.phone ? `Teléfono: ${customer.phone}` : 'Sin teléfono'}
+${customer.email ? `Email: ${customer.email}` : 'Sin email'}
+
+🏷️ *Tipo de cliente:* ${customer.customer_type.toUpperCase()}
+
+---
+*Sistema de Gestión Magia Interna*`;
+
+    const whatsappUrl = `https://wa.me/573214930228?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
-  // Función para calcular días hasta el cumpleaños
-  const getDaysUntilBirthday = (birthDate: string) => {
+  // Función para obtener clientes que necesitan notificación
+  const getCustomersNeedingNotification = () => {
     const today = new Date();
-    const birth = new Date(birthDate);
-    const nextBirthday = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
-    
-    if (nextBirthday < today) {
-      nextBirthday.setFullYear(today.getFullYear() + 1);
-    }
-    
-    const diffTime = nextBirthday.getTime() - today.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const customersNeedingNotification: Array<{customer: Customer, daysUntil: number, type: 'week' | 'day'}> = [];
+
+    customers.forEach(customer => {
+      const daysUntil = getDaysUntilBirthday(customer.birth_date);
+      
+      // Notificar 7 días antes
+      if (daysUntil === 7) {
+        customersNeedingNotification.push({
+          customer,
+          daysUntil,
+          type: 'week'
+        });
+      }
+      
+      // Notificar 1 día antes
+      if (daysUntil === 1) {
+        customersNeedingNotification.push({
+          customer,
+          daysUntil,
+          type: 'day'
+        });
+      }
+    });
+
+    return customersNeedingNotification;
+  };
+
+  // Función para obtener todos los clientes próximos (para envío manual)
+  const getAllUpcomingCustomers = () => {
+    const upcomingCustomers: Array<{customer: Customer, daysUntil: number, type: 'week' | 'day'}> = [];
+
+    customers.forEach(customer => {
+      const daysUntil = getDaysUntilBirthday(customer.birth_date);
+      
+      // Mostrar clientes que cumplen en los próximos 30 días
+      if (daysUntil <= 30 && daysUntil > 0) {
+        upcomingCustomers.push({
+          customer,
+          daysUntil,
+          type: daysUntil <= 7 ? 'week' : 'day'
+        });
+      }
+    });
+
+    return upcomingCustomers.sort((a, b) => a.daysUntil - b.daysUntil);
   };
 
   // Organizar clientes por mes
@@ -106,6 +174,12 @@ export function Birthdays() {
     return birthDate.getMonth() + 1 === currentMonth;
   });
 
+  // Obtener clientes que necesitan notificación
+  const customersNeedingNotification = getCustomersNeedingNotification();
+  
+  // Obtener todos los clientes próximos para envío manual
+  const allUpcomingCustomers = getAllUpcomingCustomers();
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -125,17 +199,112 @@ export function Birthdays() {
             <p className="text-muted-foreground">Gestiona y celebra los cumpleaños de tus clientes</p>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Calendar className="h-6 w-6 text-primary" />
-          <span className="text-sm text-muted-foreground">
-            {new Date().toLocaleDateString('es-ES', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </span>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <Calendar className="h-6 w-6 text-primary" />
+            <span className="text-sm text-muted-foreground">
+              {new Date().toLocaleDateString('es-ES', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </span>
+          </div>
         </div>
       </div>
+
+      {/* Notificaciones - Siempre visible */}
+      <Card className="border-2 border-magia-warning bg-magia-warning/5">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Bell className="h-5 w-5 text-magia-warning" />
+            <span>Notificaciones de Cumpleaños</span>
+            <Badge variant="destructive">{customersNeedingNotification.length}</Badge>
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Notificaciones automáticas: 7 días y 1 día antes. Envío manual disponible para todos los clientes próximos.
+          </p>
+        </CardHeader>
+        <CardContent>
+          {customersNeedingNotification.length > 0 && (
+            <div className="space-y-3 mb-4">
+              <h4 className="font-medium text-sm text-magia-warning">⚠️ Notificaciones Automáticas Pendientes</h4>
+              {customersNeedingNotification.map(({ customer, daysUntil, type }) => (
+                <div key={`${customer.id}-${type}`} className="flex items-center justify-between p-3 bg-background rounded-lg border border-magia-warning">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="text-xs bg-gradient-to-br from-magia-purple to-magia-gold text-white">
+                        {customer.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium text-sm">{customer.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Cumple en {daysUntil} día{daysUntil > 1 ? 's' : ''} • {type === 'week' ? 'Notificación semanal' : 'Notificación diaria'}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => sendWhatsAppNotification(customer, daysUntil)}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Enviar WhatsApp
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {allUpcomingCustomers.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm text-foreground">📅 Envío Manual - Todos los Próximos Cumpleaños</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {allUpcomingCustomers.slice(0, 6).map(({ customer, daysUntil, type }) => (
+                  <div key={`manual-${customer.id}`} className="flex items-center justify-between p-3 bg-background rounded-lg border">
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="text-xs bg-gradient-to-br from-magia-purple to-magia-gold text-white">
+                          {customer.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-sm">{customer.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Cumple en {daysUntil} día{daysUntil > 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => sendWhatsAppNotification(customer, daysUntil)}
+                      className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Notificar
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              {allUpcomingCustomers.length > 6 && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Mostrando 6 de {allUpcomingCustomers.length} clientes próximos
+                </p>
+              )}
+            </div>
+          )}
+          
+          {customers.length === 0 && (
+            <div className="text-center py-4">
+              <p className="text-sm text-muted-foreground">
+                No hay clientes con fecha de nacimiento registrada. Agrega fechas de nacimiento a tus clientes para activar las notificaciones.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -221,6 +390,15 @@ export function Birthdays() {
                           </div>
                         </div>
                       </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => sendWhatsAppNotification(customer, daysUntil)}
+                        className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white border-green-600"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Notificar a Lore
+                      </Button>
                     </CardContent>
                   </Card>
                 );
@@ -262,6 +440,7 @@ export function Birthdays() {
                   {monthData.customers.map((customer) => {
                     const age = calculateAge(customer.birth_date);
                     const birthDate = new Date(customer.birth_date);
+                    const daysUntil = getDaysUntilBirthday(customer.birth_date);
                     
                     return (
                       <div 
@@ -284,6 +463,14 @@ export function Birthdays() {
                             {customer.customer_type.toUpperCase()}
                           </Badge>
                         )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => sendWhatsAppNotification(customer, daysUntil)}
+                          className="h-6 w-6 p-0 bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          <MessageCircle className="h-3 w-3" />
+                        </Button>
                       </div>
                     );
                   })}
@@ -293,19 +480,6 @@ export function Birthdays() {
           })}
         </div>
       </div>
-
-      {/* Mensaje cuando no hay cumpleaños */}
-      {customers.length === 0 && (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No hay cumpleaños registrados</h3>
-            <p className="text-muted-foreground">
-              Agrega fechas de nacimiento a tus clientes para ver sus cumpleaños aquí.
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 } 
