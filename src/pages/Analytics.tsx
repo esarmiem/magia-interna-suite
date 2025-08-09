@@ -44,8 +44,14 @@ export function Analytics() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['analytics-stats', selectedYear],
     queryFn: async () => {
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+      const currentMonthStart = `${currentYear}-${currentMonth.toString().padStart(2, '0')}-01`;
+      const currentMonthEnd = new Date(currentYear, currentMonth, 0).toISOString().split('T')[0]; // Last day of current month
+
       // Obtener ventas con items y productos para calcular ganancias reales
-      const [salesResult, productsResult, customersResult, expensesResult] = await Promise.all([
+      const [salesResult, productsResult, customersResult, expensesResult, currentMonthSalesResult, currentMonthExpensesResult] = await Promise.all([
         supabase
           .from('sales')
           .select(`
@@ -69,17 +75,53 @@ export function Analytics() {
         supabase.from('customers').select('customer_type, total_purchases'),
         supabase.from('expenses').select('amount, category, expense_date')
           .gte('expense_date', `${selectedYear}-01-01`)
-          .lte('expense_date', `${selectedYear}-12-31`)
+          .lte('expense_date', `${selectedYear}-12-31`),
+        // Current month sales
+        supabase
+          .from('sales')
+          .select(`
+            total_amount, 
+            sale_date, 
+            discount_amount, 
+            tax_amount,
+            delivery_fee,
+            sale_items (
+              quantity,
+              unit_price,
+              total_price,
+              products (
+                cost
+              )
+            )
+          `)
+          .gte('sale_date', currentMonthStart)
+          .lte('sale_date', currentMonthEnd),
+        // Current month expenses
+        supabase.from('expenses').select('amount, category, expense_date')
+          .gte('expense_date', currentMonthStart)
+          .lte('expense_date', currentMonthEnd)
       ]);
 
       const sales = salesResult.data || [];
       const products = productsResult.data || [];
       const customers = customersResult.data || [];
       const expenses = expensesResult.data || [];
+      const currentMonthSales = currentMonthSalesResult.data || [];
+      const currentMonthExpenses = currentMonthExpensesResult.data || [];
 
-      // Calcular ganancias reales por venta
-      const salesWithProfits = sales.map(sale => {
-        const totalCost = sale.sale_items?.reduce((sum, item) => {
+      // Calcular ganancias reales por venta (función helper)
+      const calculateSaleProfit = (sale: {
+        total_amount: number;
+        sale_date: string;
+        discount_amount?: number;
+        tax_amount?: number;
+        delivery_fee?: number;
+        sale_items?: Array<{
+          quantity: number;
+          products?: { cost?: number };
+        }>;
+      }) => {
+        const totalCost = sale.sale_items?.reduce((sum: number, item) => {
           const itemCost = item.products?.cost || 0;
           return sum + (itemCost * item.quantity);
         }, 0) || 0;
@@ -99,7 +141,19 @@ export function Analytics() {
           deliveryFee,
           profit
         };
-      });
+      };
+
+      // Calcular ganancias reales por venta
+      const salesWithProfits = sales.map(calculateSaleProfit);
+      const currentMonthSalesWithProfits = currentMonthSales.map(calculateSaleProfit);
+
+      // Estadísticas del mes actual
+      const currentMonthTotalSales = currentMonthSalesWithProfits.reduce((sum, sale) => sum + sale.totalRevenue, 0);
+      const currentMonthTotalCosts = currentMonthSalesWithProfits.reduce((sum, sale) => sum + sale.totalCost, 0);
+      const currentMonthTotalProfit = currentMonthSalesWithProfits.reduce((sum, sale) => sum + sale.profit, 0);
+      const currentMonthTotalExpenses = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+      const currentMonthNetProfit = currentMonthTotalProfit - currentMonthTotalExpenses;
+      const currentMonthSalesCount = currentMonthSales.length;
 
       // Calcular estadísticas generales
       const totalSales = salesWithProfits.reduce((sum, sale) => sum + sale.totalRevenue, 0);
@@ -160,7 +214,7 @@ export function Analytics() {
       const weeklyData = Object.entries(profitByWeek)
         .sort(([a], [b]) => a.localeCompare(b))
         .slice(-8) // Últimas 8 semanas
-        .map(([week, data]) => ({
+        .map(([week, data]: [string, { revenue: number; cost: number; profit: number }]) => ({
           semana: `Sem ${new Date(week).getDate()}/${new Date(week).getMonth() + 1}`,
           ingresos: data.revenue,
           costos: data.cost,
@@ -183,7 +237,7 @@ export function Analytics() {
       const dailyData = Object.entries(profitByDay)
         .sort(([a], [b]) => a.localeCompare(b))
         .slice(-14) // Últimos 14 días
-        .map(([day, data]) => ({
+        .map(([day, data]: [string, { revenue: number; cost: number; profit: number }]) => ({
           dia: new Date(day).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }),
           ingresos: data.revenue,
           costos: data.cost,
@@ -240,7 +294,17 @@ export function Analytics() {
         categoryData,
         expenseCategoryData,
         customerTypeData,
-        netProfit: totalProfit - totalExpenses
+        netProfit: totalProfit - totalExpenses,
+        // Current month stats
+        currentMonth: {
+          totalSales: currentMonthTotalSales,
+          totalCosts: currentMonthTotalCosts,
+          totalProfit: currentMonthTotalProfit,
+          totalExpenses: currentMonthTotalExpenses,
+          netProfit: currentMonthNetProfit,
+          salesCount: currentMonthSalesCount,
+          monthName: currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+        }
       };
     },
   });
@@ -320,6 +384,70 @@ export function Analytics() {
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* KPIs del Mes Actual */}
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Calendar className="h-5 w-5 text-blue-600" />
+          <h2 className="text-xl font-bold text-gray-800">KPIs del Mes Actual - {stats.currentMonth.monthName}</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-l-4 border-l-green-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Ingresos del Mes</CardTitle>
+              <DollarSign className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{formatColombianPeso(stats.currentMonth.totalSales)}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.currentMonth.salesCount} ventas realizadas
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-red-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Costos del Mes</CardTitle>
+              <Package className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{formatColombianPeso(stats.currentMonth.totalCosts)}</div>
+              <p className="text-xs text-muted-foreground">
+                Margen: {stats.currentMonth.totalSales > 0 ? 
+                  Math.round(((stats.currentMonth.totalSales - stats.currentMonth.totalCosts) / stats.currentMonth.totalSales) * 100) : 0}%
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-blue-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Ganancia del Mes</CardTitle>
+              <TrendingUp className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">{formatColombianPeso(stats.currentMonth.totalProfit)}</div>
+              <p className="text-xs text-muted-foreground">
+                Gastos: {formatColombianPeso(stats.currentMonth.totalExpenses)}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-purple-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Ganancia Neta Mensual</CardTitle>
+              <Users className="h-4 w-4 text-purple-500" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${stats.currentMonth.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatColombianPeso(stats.currentMonth.netProfit)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {stats.currentMonth.netProfit >= 0 ? 'Rentable' : 'En pérdida'} este mes
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Análisis de Ganancias Mensuales */}
