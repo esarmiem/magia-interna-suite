@@ -159,7 +159,7 @@ export function Dashboard() {
                   <div className="flex items-center space-x-2">
                     <Progress 
                       value={Math.min((product.stock / 50) * 100, 100)} 
-                      className="flex-1 h-2" 
+                      className="flex-1 h-2 bg-background" 
                     />
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       product.stock < 5 
@@ -200,7 +200,7 @@ export function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">{alert.product}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs">
                       Solo {alert.stock} unidades restantes
                     </p>
                   </div>
@@ -226,14 +226,14 @@ export function Dashboard() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { name: 'Nueva Venta', action: 'nueva-venta', color: 'bg-magia-success' },
+              { name: 'Nueva Venta', action: 'nueva-venta', color: 'bg-primary' },
               { name: 'Agregar Producto', action: 'agregar-producto', color: 'bg-primary' },
-              { name: 'Registrar Cliente', action: 'registrar-cliente', color: 'bg-magia-purple' },
-              { name: 'Ver Reportes', action: 'ver-reportes', color: 'bg-magia-gold' }
+              { name: 'Registrar Cliente', action: 'registrar-cliente', color: 'bg-primary' },
+              { name: 'Ver Reportes', action: 'ver-reportes', color: 'bg-primary' }
             ].map((action) => (
               <button
                 key={action.name}
-                className={`${action.color} text-white p-4 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity`}
+                className={`${action.color} text-white p-4 rounded-lg text-sm font-medium hover:opacity-80 transition-opacity`}
                 onClick={() => handleQuickAction(action.action)}
               >
                 {action.name}

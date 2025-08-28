@@ -82,12 +82,12 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-background dark:text-primary-foreground">
         <CardHeader className="flex flex-row items-center justify-between pl-14">
-          <CardTitle>Detalles de la Venta</CardTitle>
+          <CardTitle className='dark:text-primary-foreground'>Detalles de la Venta</CardTitle>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={onClose} className="no-export">
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4 dark:text-primary-foreground" />
             </Button>
           </div>
         </CardHeader>

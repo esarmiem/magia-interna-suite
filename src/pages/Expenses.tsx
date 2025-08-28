@@ -220,7 +220,7 @@ export function Expenses() {
                   <TableCell>{formatColombianPeso(expense.amount)}</TableCell>
                   <TableCell>{expense.payment_method}</TableCell>
                   <TableCell>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 dark:text-primary-foreground">
                       <Button
                         variant="outline"
                         size="sm"

@@ -51,7 +51,7 @@ export function Sidebar() {
 
   return (
     <div className={cn(
-      "flex flex-col h-screen bg-card border-r border-border transition-all duration-300",
+      "flex flex-col h-screen bg-background border-r border-border transition-all duration-300",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
@@ -93,12 +93,12 @@ export function Sidebar() {
                 "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group",
                 isActive 
                   ? "bg-primary text-primary-foreground shadow-sm" 
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  : "text-muted-foreground hover:text-primary-foreground hover:bg-accent"
               )}
             >
               <Icon size={18} className={cn(
                 "flex-shrink-0",
-                isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-primary-foreground"
               )} />
               {!collapsed && (
                 <span className="truncate">{item.name}</span>
