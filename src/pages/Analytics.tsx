@@ -148,7 +148,8 @@ export function Analytics() {
       const currentMonthSalesWithProfits = currentMonthSales.map(calculateSaleProfit);
 
       // Estadísticas del mes actual
-      const currentMonthTotalSales = currentMonthSalesWithProfits.reduce((sum, sale) => sum + sale.totalRevenue, 0);
+      // Excluimos el delivery_fee de los ingresos del mes actual
+      const currentMonthTotalSales = currentMonthSalesWithProfits.reduce((sum, sale) => sum + sale.totalRevenue - (sale.deliveryFee || 0), 0);
       const currentMonthTotalCosts = currentMonthSalesWithProfits.reduce((sum, sale) => sum + sale.totalCost, 0);
       const currentMonthTotalProfit = currentMonthSalesWithProfits.reduce((sum, sale) => sum + sale.profit, 0);
       const currentMonthTotalExpenses = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -156,7 +157,8 @@ export function Analytics() {
       const currentMonthSalesCount = currentMonthSales.length;
 
       // Calcular estadísticas generales
-      const totalSales = salesWithProfits.reduce((sum, sale) => sum + sale.totalRevenue, 0);
+      // Excluimos el delivery_fee de los ingresos totales ya que no es un ingreso real de la empresa
+      const totalSales = salesWithProfits.reduce((sum, sale) => sum + sale.totalRevenue - (sale.deliveryFee || 0), 0);
       const totalCosts = salesWithProfits.reduce((sum, sale) => sum + sale.totalCost, 0);
       const totalDiscounts = salesWithProfits.reduce((sum, sale) => sum + sale.discount, 0);
       const totalTaxes = salesWithProfits.reduce((sum, sale) => sum + sale.tax, 0);
