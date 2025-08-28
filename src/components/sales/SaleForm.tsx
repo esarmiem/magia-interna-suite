@@ -485,7 +485,11 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                   <SelectContent>
                     <SelectItem value="efectivo">Efectivo</SelectItem>
                     <SelectItem value="tarjeta">Tarjeta</SelectItem>
-                    <SelectItem value="transferencia">Transferencia</SelectItem>
+                    <SelectItem value="transferencia">Transferencia (Antiguo)</SelectItem>
+                    <SelectItem value="nequi">Nequi</SelectItem>
+                    <SelectItem value="bancolombia">Bancolombia</SelectItem>
+                    <SelectItem value="daviplata">Daviplata</SelectItem>
+                    <SelectItem value="sistecredito">Sistecredito</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
