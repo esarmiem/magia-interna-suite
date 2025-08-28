@@ -3,84 +3,131 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design system optimizado para Magia Interna */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-
-    /* Purple theme para Magia Interna */
-    --primary: 262 83% 58%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 260 4.8% 96%;
-    --secondary-foreground: 240 5.9% 10%;
-
-    --muted: 260 4.8% 96%;
-    --muted-foreground: 240 3.8% 46.1%;
-
-    --accent: 260 4.8% 96%;
-    --accent-foreground: 240 5.9% 10%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 260 5.9% 91.4%;
-    --input: 260 5.9% 91.4%;
-    --ring: 262 83% 58%;
-
-    --radius: 0.75rem;
-
-    /* Colores personalizados para Magia Interna */
-    --magia-purple: 262 83% 58%;
-    --magia-light: 260 4.8% 96%;
-    --magia-gold: 45 93% 58%;
-    --magia-success: 142 76% 36%;
-    --magia-warning: 38 92% 50%;
+    --background: #F9F9F9F9;
+    --foreground: #535347;
+    --card: #F2E8C7;
+    --card-foreground: #535347;
+    --popover: #F2E8C7;
+    --popover-foreground: #535347;
+    --primary: #D78C31;
+    --primary-foreground: #F2E8C7;
+    --secondary: #B36233;
+    --secondary-foreground: #F2E8C7;
+    --muted: #e6ddb9;
+    --muted-foreground: #2B4916;
+    --accent: #2B4916;
+    --accent-foreground: #F2E8C7;
+    --destructive: #B36233;
+    --destructive-foreground: #F2E8C7;
+    --border: #D78C31;
+    --input: #e6ddb9;
+    --ring: #D78C31;
+    --chart-1: #535347;
+    --chart-2: #2B4916;
+    --chart-3: #B36233;
+    --chart-4: #D78C31;
+    --chart-5: #F2E8C7;
+    --sidebar: #535347;
+    --sidebar-foreground: #F2E8C7;
+    --sidebar-primary: #D78C31;
+    --sidebar-primary-foreground: #535347;
+    --sidebar-accent: #F2E8C7;
+    --sidebar-accent-foreground: #535347;
+    --sidebar-border: #B36233;
+    --sidebar-ring: #D78C31;
+    --font-sans: Architects Daughter, sans-serif;
+    --font-serif: Georgia, serif;
+    --font-mono: "Fira Code", "Courier New", monospace;
+    --radius: 0.625rem;
+    --shadow-2xs: 1px 4px 5px 0px hsl(0 0% 0% / 0.01);
+    --shadow-xs: 1px 4px 5px 0px hsl(0 0% 0% / 0.01);
+    --shadow-sm: 1px 4px 5px 0px hsl(0 0% 0% / 0.03), 1px 1px 2px -1px hsl(0 0% 0% / 0.03);
+    --shadow: 1px 4px 5px 0px hsl(0 0% 0% / 0.03), 1px 1px 2px -1px hsl(0 0% 0% / 0.03);
+    --shadow-md: 1px 4px 5px 0px hsl(0 0% 0% / 0.03), 1px 2px 4px -1px hsl(0 0% 0% / 0.03);
+    --shadow-lg: 1px 4px 5px 0px hsl(0 0% 0% / 0.03), 1px 4px 6px -1px hsl(0 0% 0% / 0.03);
+    --shadow-xl: 1px 4px 5px 0px hsl(0 0% 0% / 0.03), 1px 8px 10px -1px hsl(0 0% 0% / 0.03);
+    --shadow-2xl: 1px 4px 5px 0px hsl(0 0% 0% / 0.07);
+    --tracking-tight: -0.025em;
+    --tracking-normal: 0em;
+    --tracking-wide: 0.025em;
+    --tracking-wider: 0.05em;
+    --tracking-widest: 0.1em;
+    
+    /* Light mode colors */
+    --magia-dark: #535347;
+    --magia-green: #2B4916;
+    --magia-orange: #B36233;
+    --magia-gold: #D78C31;
+    --magia-light: #F2E8C7;
   }
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+.dark {
+  --background: #F2E8C7; /* Fondo claro */
+  --foreground: #535347; /* Texto principal oscuro */
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+  --card: #2B4916; /* Caja verde oscura */
+  --card-foreground: #F2E8C7; /* Texto en card claro */
 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+  --popover: #2B4916;
+  --popover-foreground: #F2E8C7;
 
-    --primary: 262 83% 58%;
-    --primary-foreground: 240 10% 3.9%;
+  --primary: #D78C31; /* Dorado */
+  --primary-foreground: #2B4916; /* Contraste sobre botones primarios */
 
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
+  --secondary: #B36233; 
+  --secondary-foreground: #F2E8C7;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+  --muted: #e6ddb9; /* Versión más suave del fondo */
+  --muted-foreground: #2B4916;
 
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+  --accent: #535347; 
+  --accent-foreground: #F2E8C7;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+  --destructive: #B36233;
+  --destructive-foreground: #F2E8C7;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 262 83% 58%;
+  --border: #D78C31;
+  --input: #e6ddb9;
+  --ring: #D78C31;
 
-    /* Dark mode colors */
-    --magia-purple: 262 83% 58%;
-    --magia-light: 240 3.7% 15.9%;
-    --magia-gold: 45 93% 58%;
-    --magia-success: 142 76% 36%;
-    --magia-warning: 38 92% 50%;
-  }
+  --chart-1: #535347;
+  --chart-2: #2B4916;
+  --chart-3: #B36233;
+  --chart-4: #D78C31;
+  --chart-5: #F2E8C7;
+
+  --sidebar: #535347;
+  --sidebar-foreground: #F2E8C7;
+  --sidebar-primary: #D78C31;
+  --sidebar-primary-foreground: #535347;
+  --sidebar-accent: #F2E8C7;
+  --sidebar-accent-foreground: #535347;
+  --sidebar-border: #B36233;
+  --sidebar-ring: #D78C31;
+
+  --font-sans: Architects Daughter, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: "Fira Code", "Courier New", monospace;
+
+  --radius: 0.625rem;
+  --shadow-2xs: 1px 4px 5px 0px hsl(0 0% 0% / 0.01);
+  --shadow-xs: 1px 4px 5px 0px hsl(0 0% 0% / 0.01);
+  --shadow-sm: 1px 4px 5px 0px hsl(0 0% 0% / 0.03), 1px 1px 2px -1px hsl(0 0% 0% / 0.03);
+  --shadow: 1px 4px 5px 0px hsl(0 0% 0% / 0.03), 1px 1px 2px -1px hsl(0 0% 0% / 0.03);
+  --shadow-md: 1px 4px 5px 0px hsl(0 0% 0% / 0.03), 1px 2px 4px -1px hsl(0 0% 0% / 0.03);
+  --shadow-lg: 1px 4px 5px 0px hsl(0 0% 0% / 0.03), 1px 4px 6px -1px hsl(0 0% 0% / 0.03);
+  --shadow-xl: 1px 4px 5px 0px hsl(0 0% 0% / 0.03), 1px 8px 10px -1px hsl(0 0% 0% / 0.03);
+  --shadow-2xl: 1px 4px 5px 0px hsl(0 0% 0% / 0.07);
+
+  /* Dark mode adaptado */
+  --magia-dark: #535347;
+  --magia-green: #2B4916;
+  --magia-orange: #B36233;
+  --magia-gold: #D78C31;
+  --magia-light: #F2E8C7;
+}
 }
 
 @layer base {
@@ -91,6 +138,7 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    letter-spacing: var(--tracking-normal);
   }
 }
 

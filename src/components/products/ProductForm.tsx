@@ -301,7 +301,7 @@ export function ProductForm({ product, onClose, onSuccess }: ProductFormProps) {
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button className='dark:text-primary-foreground' type="button" variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={mutation.isPending}>

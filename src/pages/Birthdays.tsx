@@ -450,21 +450,21 @@ ${customer.email ? `Email: ${customer.email}` : 'Sin email'}
                       return (
                         <div 
                           key={customer.id}
-                          className="flex items-center space-x-3 p-2 rounded-lg hover:bg-accent transition-colors"
+                          className="flex items-center space-x-3 p-2 rounded-lg hover:bg-accent hover:text-primary-foreground transition-colors"
                         >
                           <Avatar className="h-8 w-8 flex-shrink-0">
                             <AvatarFallback className="text-xs bg-gradient-to-br from-magia-purple to-magia-gold text-white">
                               {customer.name.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 hover:text-primary-foreground">
                             <p className="font-medium text-sm truncate">{customer.name}</p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs">
                               {birthDate.getDate()} • {age} años
                             </p>
                           </div>
                           {customer.customer_type !== 'regular' && (
-                            <Badge variant="outline" className="text-xs flex-shrink-0">
+                            <Badge variant="outline" className="text-xs flex-shrink-0 hover:text-primary-foreground">
                               {customer.customer_type.toUpperCase()}
                             </Badge>
                           )}

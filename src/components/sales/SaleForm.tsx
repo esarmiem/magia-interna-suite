@@ -41,6 +41,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     delivery_fee: sale?.delivery_fee || 0,
     notes: sale?.notes || '',
     status: sale?.status || 'completed',
+    shipping_type: sale?.notes?.includes('Contraentrega') ? 'contraentrega' : 'pago',
   });
 
   const [displayData, setDisplayData] = useState({
@@ -193,16 +194,25 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
         customerId = anonymousCustomer.id;
       }
 
+      // Añadir el tipo de envío a las notas
+      let notes = data.saleData.notes || '';
+      if (data.saleData.shipping_type === 'contraentrega' && !notes.includes('Contraentrega')) {
+        notes = notes ? `${notes} (Contraentrega)` : 'Contraentrega';
+      }
+
+      // Eliminar shipping_type del objeto antes de enviarlo a la base de datos
+      const { shipping_type, ...dataToSave } = data.saleData;
+
       if (sale) {
         const { error } = await supabase
           .from('sales')
-          .update({ ...data.saleData, customer_id: customerId, total_amount: totalAmount })
+          .update({ ...dataToSave, customer_id: customerId, total_amount: totalAmount, notes })
           .eq('id', sale.id);
         if (error) throw error;
       } else {
         const { data: newSale, error: saleError } = await supabase
           .from('sales')
-          .insert({ ...data.saleData, customer_id: customerId, total_amount: totalAmount })
+          .insert({ ...dataToSave, customer_id: customerId, total_amount: totalAmount, notes })
           .select()
           .single();
         
@@ -475,7 +485,11 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                   <SelectContent>
                     <SelectItem value="efectivo">Efectivo</SelectItem>
                     <SelectItem value="tarjeta">Tarjeta</SelectItem>
-                    <SelectItem value="transferencia">Transferencia</SelectItem>
+                    <SelectItem value="transferencia">Transferencia (Antiguo)</SelectItem>
+                    <SelectItem value="nequi">Nequi</SelectItem>
+                    <SelectItem value="bancolombia">Bancolombia</SelectItem>
+                    <SelectItem value="daviplata">Daviplata</SelectItem>
+                    <SelectItem value="sistecredito">Sistecredito</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -639,6 +653,21 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                   value={displayData.delivery_fee}
                   onChange={(e) => handleChange('delivery_fee', e.target.value)}
                 />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="shipping_type">Tipo de Envío</Label>
+                <Select value={formData.shipping_type} onValueChange={(value) => handleChange('shipping_type', value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pago">Pago</SelectItem>
+                    <SelectItem value="contraentrega">Contraentrega</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

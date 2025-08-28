@@ -211,7 +211,7 @@ export function Products() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Productos</p>
+                <p className="text-sm">Total Productos</p>
                 <p className="text-2xl font-bold">{products?.length || 0}</p>
               </div>
               <Package className="w-8 h-8 text-primary" />
@@ -223,7 +223,7 @@ export function Products() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Productos Activos</p>
+                <p className="text-sm">Productos Activos</p>
                 <p className="text-2xl font-bold">{products?.filter(p => p.is_active).length || 0}</p>
               </div>
               <div className="w-3 h-3 bg-green-500 rounded-full" />
@@ -235,7 +235,7 @@ export function Products() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Stock Bajo</p>
+                <p className="text-sm">Stock Bajo</p>
                 <p className="text-2xl font-bold text-orange-600">{lowStockProducts.length}</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-orange-600" />
@@ -247,7 +247,7 @@ export function Products() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Categorías</p>
+                <p className="text-sm">Categorías</p>
                 <p className="text-2xl font-bold">{categories.length}</p>
               </div>
               <Filter className="w-8 h-8 text-primary" />
@@ -278,7 +278,7 @@ export function Products() {
                 setSelectedCategory(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-3 py-2 border border-input rounded-md bg-background"
+              className="px-3 py-2 border border-input rounded-md bg-background dark:text-muted-foreground"
             >
               <option value="">Todas las categorías</option>
               {categories.map(category => (
@@ -298,7 +298,7 @@ export function Products() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Producto</TableHead>
+                <TableHead >Producto</TableHead>
                 <TableHead>SKU</TableHead>
                 <TableHead>Categoría</TableHead>
                 <TableHead>Precio</TableHead>
@@ -339,23 +339,23 @@ export function Products() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 dark:text-primary-foreground">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         onClick={() => handleView(product)}
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         onClick={() => handleEdit(product)}
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         onClick={() => handleDelete(product)}
                         className="text-red-600 hover:text-red-700"

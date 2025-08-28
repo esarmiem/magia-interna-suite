@@ -17,11 +17,11 @@ interface CustomerDetailsProps {
 export function CustomerDetails({ customer, onClose }: CustomerDetailsProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-background">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Detalles del Cliente</CardTitle>
+          <CardTitle className='dark:text-primary-foreground'>Detalles del Cliente</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
+            <X className="dark:text-primary-foreground h-4 w-4" />
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">

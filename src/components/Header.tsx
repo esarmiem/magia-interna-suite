@@ -26,19 +26,19 @@ export function Header() {
         {/* Actions */}
         <div className="flex items-center space-x-2">
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground"
           >
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </Button>
           
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
             onClick={logout}
-            className="text-muted-foreground hover:text-red-600 transition-colors"
+            className="text-muted-foreground transition-colors"
             title="Cerrar sesión"
           >
             <LogOut size={18} />
