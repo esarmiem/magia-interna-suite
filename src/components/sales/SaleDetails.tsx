@@ -126,7 +126,10 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
               <div className="grid grid-cols-3 gap-x-2 gap-y-2 mb-6">
                 <div><strong>Fecha:</strong> {format(new Date(sale.sale_date), 'dd/MM/yyyy HH:mm')}</div>
                 <div><strong>Método de Pago:</strong> {sale.payment_method}</div>
-                <div><strong>Estado:</strong> {sale.status === 'completed' ? 'Completado' : sale.status}</div>
+                <div className="flex flex-col">
+                  {/*<div><strong>Estado:</strong> {sale.status === 'completed' ? 'Completado' : sale.status}</div>*/}
+                  <div><strong>Tipo de Envío:</strong> {sale.notes?.includes('Contraentrega') ? 'Contraentrega' : 'Pago'}</div>
+                </div>
               </div>
               <h3 className="text-lg font-semibold mb-2">Productos</h3>
               <Table>
