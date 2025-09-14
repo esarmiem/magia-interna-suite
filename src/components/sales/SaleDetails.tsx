@@ -82,9 +82,9 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-background dark:text-primary-foreground">
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-background dark:text-primary-foreground font-mono">
         <CardHeader className="flex flex-row items-center justify-between pl-14">
-          <CardTitle className='dark:text-primary-foreground'>Detalles de la Venta</CardTitle>
+          <CardTitle className='dark:text-primary-foreground font-bold'>Detalles de la Venta</CardTitle>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={onClose} className="no-export">
               <X className="h-4 w-4 dark:text-primary-foreground" />
@@ -98,23 +98,23 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
             <div>
               <img src="/magiainternalogo.webp" alt="Logo" width={78} height={78} className="object-contain" />
               <div className="mb-3">
-                <h4 className="text-lg font-semibold">Remitente</h4>
+                <h4 className="text-lg font-bold">Remitente</h4>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-1">
-                  <div><strong>Nombre:</strong> Magia Interna</div>
-                  <div><strong>Nit:</strong> 1100974413-1</div>
-                  <div><strong>Celular:</strong> 3214930228</div>
+                  <div className="font-medium"><strong>Nombre:</strong> Magia Interna</div>
+                  <div className="font-medium"><strong>Nit:</strong> 1100974413-1</div>
+                  <div className="font-medium"><strong>Celular:</strong> 3214930228</div>
                 </div>
               </div>
-              <h3 className="text-lg font-semibold mb-3">Información del Cliente</h3>
+              <h3 className="text-lg font-bold mb-3">Información del Cliente</h3>
               {customer ? (
                 <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-                  <div><strong>Nombre:</strong> {customer.name}</div>
-                  <div><strong>Teléfono:</strong> {customer.phone || 'N/A'}</div>
-                  <div><strong>Dirección:</strong> {customer.address || 'N/A'}</div>
-                  <div><strong>Ciudad:</strong> {customer.city || 'N/A'}</div>
-                  <div><strong>Email:</strong> {customer.email || 'N/A'}</div>
+                  <div className="font-medium"><strong>Nombre:</strong> {customer.name}</div>
+                  <div className="font-medium"><strong>Teléfono:</strong> {customer.phone || 'N/A'}</div>
+                  <div className="font-medium"><strong>Dirección:</strong> {customer.address || 'N/A'}</div>
+                  <div className="font-medium"><strong>Ciudad:</strong> {customer.city || 'N/A'}</div>
+                  <div className="font-medium"><strong>Email:</strong> {customer.email || 'N/A'}</div>
                   {/*<div><strong>Tipo:</strong> {customer.customer_type}</div>*/}
-                  <div><strong>Tipo de Envío:</strong> {sale.notes?.includes('Contraentrega') ? 'Contraentrega' : 'Pago'}</div>
+                  <div className="font-medium"><strong>Tipo de Envío:</strong> {sale.notes?.includes('Contraentrega') ? 'Contraentrega' : 'Pago'}</div>
                 </div>
               ) : (
                 <p>Cliente Anónimo</p>
@@ -123,7 +123,7 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
 
             {/* Sección 2: Información de la Venta y Productos */}
             <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-3">Información de la Venta</h3>
+              <h3 className="text-lg font-bold mb-3">Información de la Venta</h3>
               <div className="grid grid-cols-3 gap-x-2 gap-y-2 mb-6">
                 <div><strong>Fecha:</strong> {format(new Date(sale.sale_date), 'dd/MM/yyyy HH:mm')}</div>
                 <div><strong>Método de Pago:</strong> {sale.payment_method}</div>
@@ -172,7 +172,7 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
                   </div>
                 </div>
                     {sale.notes && (
-                      <p className="text-sm text-gray-500 mt-4">Nota: {sale.notes}</p>
+                      <p className="text-sm text-gray-500 mt-4 font-semibold">Nota: {sale.notes}</p>
                     )}
               </div>
             </div>
