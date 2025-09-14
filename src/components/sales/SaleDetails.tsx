@@ -58,7 +58,7 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
           products(name, sku)
         `)
         .eq('sale_id', sale.id);
-      
+
       if (error) throw error;
       return data;
     },
@@ -73,7 +73,7 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
         .select('*')
         .eq('id', sale.customer_id)
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -113,7 +113,8 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
                   <div><strong>Dirección:</strong> {customer.address || 'N/A'}</div>
                   <div><strong>Ciudad:</strong> {customer.city || 'N/A'}</div>
                   <div><strong>Email:</strong> {customer.email || 'N/A'}</div>
-                  <div><strong>Tipo:</strong> {customer.customer_type}</div>
+                  {/*<div><strong>Tipo:</strong> {customer.customer_type}</div>*/}
+                  <div><strong>Tipo de Envío:</strong> {sale.notes?.includes('Contraentrega') ? 'Contraentrega' : 'Pago'}</div>
                 </div>
               ) : (
                 <p>Cliente Anónimo</p>
@@ -128,7 +129,7 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
                 <div><strong>Método de Pago:</strong> {sale.payment_method}</div>
                 <div className="flex flex-col">
                   {/*<div><strong>Estado:</strong> {sale.status === 'completed' ? 'Completado' : sale.status}</div>*/}
-                  <div><strong>Tipo de Envío:</strong> {sale.notes?.includes('Contraentrega') ? 'Contraentrega' : 'Pago'}</div>
+                  {/*<div><strong>Tipo de Envío:</strong> {sale.notes?.includes('Contraentrega') ? 'Contraentrega' : 'Pago'}</div>*/}
                 </div>
               </div>
               <h3 className="text-lg font-semibold mb-2">Productos</h3>
