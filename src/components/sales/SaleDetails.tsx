@@ -112,7 +112,7 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
                   <div className="font-medium"><strong>Teléfono:</strong> {customer.phone || 'N/A'}</div>
                   <div className="font-medium"><strong>Dirección:</strong> {customer.address || 'N/A'}</div>
                   <div className="font-medium"><strong>Ciudad:</strong> {customer.city || 'N/A'}</div>
-                  <div className="font-medium"><strong>Email:</strong> {customer.email || 'N/A'}</div>
+                  {/* <div className="font-medium"><strong>Email:</strong> {customer.email || 'N/A'}</div> */}
                   {/*<div><strong>Tipo:</strong> {customer.customer_type}</div>*/}
                   <div className="font-medium"><strong>Tipo de Envío:</strong> {sale.notes?.includes('Contraentrega') ? 'Contraentrega' : 'Pago'}</div>
                 </div>
