@@ -554,7 +554,7 @@ export function Analytics() {
 
       {/* Gráficos de Ganancia */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Ganancia por Mes</CardTitle>
             <p className="text-sm text-muted-foreground">Ingresos vs Costos vs Ganancia</p>
@@ -578,9 +578,9 @@ export function Analytics() {
               </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+        </Card> */}
 
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Ganancia por Semana</CardTitle>
             <p className="text-sm text-muted-foreground">Últimas 8 semanas</p>
@@ -604,9 +604,9 @@ export function Analytics() {
               </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+        </Card> */}
 
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Ganancia por Día</CardTitle>
             <p className="text-sm text-muted-foreground">Últimos 14 días</p>
@@ -630,7 +630,7 @@ export function Analytics() {
               </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+        </Card> */}
 
         <Card>
           <CardHeader>
@@ -659,7 +659,7 @@ export function Analytics() {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Gastos por Categoría</CardTitle>
           </CardHeader>
@@ -674,7 +674,7 @@ export function Analytics() {
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+        </Card> */}
 
         <Card>
           <CardHeader>
