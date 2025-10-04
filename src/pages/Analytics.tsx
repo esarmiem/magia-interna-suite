@@ -41,7 +41,7 @@ export function Analytics() {
     }
   };
 
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading, error } = useQuery({
     queryKey: ['analytics-stats', selectedYear],
     queryFn: async () => {
       const currentDate = new Date();
@@ -55,11 +55,13 @@ export function Analytics() {
         supabase
           .from('sales')
           .select(`
-            total_amount, 
-            sale_date, 
-            discount_amount, 
+            id,
+            total_amount,
+            sale_date,
+            discount_amount,
             tax_amount,
             delivery_fee,
+            payment_method,
             sale_items (
               quantity,
               unit_price,
@@ -80,11 +82,13 @@ export function Analytics() {
         supabase
           .from('sales')
           .select(`
-            total_amount, 
-            sale_date, 
-            discount_amount, 
+            id,
+            total_amount,
+            sale_date,
+            discount_amount,
             tax_amount,
             delivery_fee,
+            payment_method,
             sale_items (
               quantity,
               unit_price,
@@ -111,11 +115,13 @@ export function Analytics() {
 
       // Calcular ganancias reales por venta (función helper)
       const calculateSaleProfit = (sale: {
+        id: string;
         total_amount: number;
         sale_date: string;
         discount_amount?: number;
         tax_amount?: number;
         delivery_fee?: number;
+        payment_method: string;
         sale_items?: Array<{
           quantity: number;
           products?: { cost?: number };
@@ -125,17 +131,21 @@ export function Analytics() {
           const itemCost = item.products?.cost || 0;
           return sum + (itemCost * item.quantity);
         }, 0) || 0;
-        
+
         const totalRevenue = sale.total_amount;
         const discount = sale.discount_amount || 0;
         const tax = sale.tax_amount || 0;
         const deliveryFee = sale.delivery_fee || 0;
-        const profit = totalRevenue - totalCost - discount - tax - deliveryFee;
-        
+
+        // Calcular ingresos netos (excluyendo delivery_fee como indica el comentario)
+        const netRevenue = totalRevenue - deliveryFee;
+        const profit = netRevenue - totalCost - discount - tax;
+
         return {
           ...sale,
           totalCost,
           totalRevenue,
+          netRevenue,
           discount,
           tax,
           deliveryFee,
@@ -148,8 +158,8 @@ export function Analytics() {
       const currentMonthSalesWithProfits = currentMonthSales.map(calculateSaleProfit);
 
       // Estadísticas del mes actual
-      // Excluimos el delivery_fee de los ingresos del mes actual
-      const currentMonthTotalSales = currentMonthSalesWithProfits.reduce((sum, sale) => sum + sale.totalRevenue - (sale.deliveryFee || 0), 0);
+      // Usamos netRevenue (ingresos excluyendo delivery_fee) para mantener consistencia
+      const currentMonthTotalSales = currentMonthSalesWithProfits.reduce((sum, sale) => sum + sale.netRevenue, 0);
       const currentMonthTotalCosts = currentMonthSalesWithProfits.reduce((sum, sale) => sum + sale.totalCost, 0);
       const currentMonthTotalProfit = currentMonthSalesWithProfits.reduce((sum, sale) => sum + sale.profit, 0);
       const currentMonthTotalExpenses = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -157,8 +167,8 @@ export function Analytics() {
       const currentMonthSalesCount = currentMonthSales.length;
 
       // Calcular estadísticas generales
-      // Excluimos el delivery_fee de los ingresos totales ya que no es un ingreso real de la empresa
-      const totalSales = salesWithProfits.reduce((sum, sale) => sum + sale.totalRevenue - (sale.deliveryFee || 0), 0);
+      // Usamos netRevenue para mantener consistencia con el cálculo de ganancias
+      const totalSales = salesWithProfits.reduce((sum, sale) => sum + sale.netRevenue, 0);
       const totalCosts = salesWithProfits.reduce((sum, sale) => sum + sale.totalCost, 0);
       const totalDiscounts = salesWithProfits.reduce((sum, sale) => sum + sale.discount, 0);
       const totalTaxes = salesWithProfits.reduce((sum, sale) => sum + sale.tax, 0);
@@ -176,11 +186,17 @@ export function Analytics() {
       ];
 
       const profitByMonth = salesWithProfits.reduce((acc: Record<string, { revenue: number; cost: number; profit: number }>, sale) => {
-        const month = new Date(sale.sale_date).toLocaleDateString('es-ES', { month: 'short' });
+        // Usar método más confiable para obtener el nombre del mes
+        const monthNames = ['ene', 'feb', 'mar', 'abr', 'may', 'jun',
+                          'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+        const date = new Date(sale.sale_date);
+        const monthIndex = date.getMonth(); // getMonth() devuelve 0-11
+        const month = monthNames[monthIndex];
+
         if (!acc[month]) {
           acc[month] = { revenue: 0, cost: 0, profit: 0 };
         }
-        acc[month].revenue += sale.totalRevenue;
+        acc[month].revenue += sale.netRevenue;
         acc[month].cost += sale.totalCost;
         acc[month].profit += sale.profit;
         return acc;
@@ -203,11 +219,11 @@ export function Analytics() {
         const weekStart = new Date(date);
         weekStart.setDate(date.getDate() - date.getDay());
         const weekKey = weekStart.toISOString().split('T')[0];
-        
+
         if (!acc[weekKey]) {
           acc[weekKey] = { revenue: 0, cost: 0, profit: 0 };
         }
-        acc[weekKey].revenue += sale.totalRevenue;
+        acc[weekKey].revenue += sale.netRevenue;
         acc[weekKey].cost += sale.totalCost;
         acc[weekKey].profit += sale.profit;
         return acc;
@@ -226,11 +242,11 @@ export function Analytics() {
       // Ganancia por día
       const profitByDay = salesWithProfits.reduce((acc: Record<string, { revenue: number; cost: number; profit: number }>, sale) => {
         const dayKey = sale.sale_date.split('T')[0];
-        
+
         if (!acc[dayKey]) {
           acc[dayKey] = { revenue: 0, cost: 0, profit: 0 };
         }
-        acc[dayKey].revenue += sale.totalRevenue;
+        acc[dayKey].revenue += sale.netRevenue;
         acc[dayKey].cost += sale.totalCost;
         acc[dayKey].profit += sale.profit;
         return acc;
@@ -279,6 +295,18 @@ export function Analytics() {
         value: count
       }));
 
+      // Métodos de pago
+      const paymentMethods = salesWithProfits.reduce((acc: Record<string, number>, sale) => {
+        acc[sale.payment_method] = (acc[sale.payment_method] || 0) + 1;
+        return acc;
+      }, {});
+
+      const paymentMethodData = Object.entries(paymentMethods).map(([method, count]) => ({
+        metodo: method,
+        cantidad: count,
+        porcentaje: salesWithProfits.length > 0 ? Math.round((count / salesWithProfits.length) * 100) : 0
+      }));
+
       return {
         totalSales,
         totalCosts,
@@ -296,6 +324,7 @@ export function Analytics() {
         categoryData,
         expenseCategoryData,
         customerTypeData,
+        paymentMethodData,
         netProfit: totalProfit - totalExpenses,
         // Current month stats
         currentMonth: {
@@ -315,6 +344,13 @@ export function Analytics() {
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-64">Cargando analytics...</div>;
+  }
+
+  if (error) {
+    console.error('Error en Analytics:', error);
+    return <div className="flex justify-center items-center h-64">
+      Error al cargar los datos: {error.message}
+    </div>;
   }
 
   if (!stats) {
@@ -508,8 +544,9 @@ export function Analytics() {
                 {formatColombianPeso(stats?.monthlyData.reduce((sum, month) => sum + month.ganancia, 0) || 0)}
               </div>
               <p className="text-sm text-blue-600">
-                Este Año +{Math.round(((stats?.monthlyData.reduce((sum, month) => sum + month.ganancia, 0) || 0) / 
-                  (stats?.monthlyData.reduce((sum, month) => sum + month.ingresos, 0) || 1)) * 100)}%
+                Margen: {stats?.monthlyData.reduce((sum, month) => sum + month.ingresos, 0) > 0 ?
+                  Math.round(((stats?.monthlyData.reduce((sum, month) => sum + month.ganancia, 0) || 0) /
+                  (stats?.monthlyData.reduce((sum, month) => sum + month.ingresos, 0) || 1)) * 100) : 0}%
               </p>
             </div>
             <ResponsiveContainer width="100%" height={400}>
@@ -533,7 +570,7 @@ export function Analytics() {
 
       {/* Gráficos de Ganancia */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Ganancia por Mes</CardTitle>
             <p className="text-sm text-muted-foreground">Ingresos vs Costos vs Ganancia</p>
@@ -557,9 +594,9 @@ export function Analytics() {
               </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+        </Card> */}
 
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Ganancia por Semana</CardTitle>
             <p className="text-sm text-muted-foreground">Últimas 8 semanas</p>
@@ -583,9 +620,9 @@ export function Analytics() {
               </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+        </Card> */}
 
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Ganancia por Día</CardTitle>
             <p className="text-sm text-muted-foreground">Últimos 14 días</p>
@@ -609,7 +646,7 @@ export function Analytics() {
               </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+        </Card> */}
 
         <Card>
           <CardHeader>
@@ -638,7 +675,7 @@ export function Analytics() {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Gastos por Categoría</CardTitle>
           </CardHeader>
@@ -653,7 +690,7 @@ export function Analytics() {
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+        </Card> */}
 
         <Card>
           <CardHeader>
@@ -679,6 +716,40 @@ export function Analytics() {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Métodos de Pago</CardTitle>
+            <p className="text-sm text-muted-foreground">Distribución de métodos de pago utilizados</p>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stats.paymentMethodData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="metodo" />
+                <YAxis />
+                <Tooltip
+                  formatter={(value, name) => [
+                    name === 'cantidad' ? `${value} ventas` : `${value}%`,
+                    name === 'cantidad' ? 'Cantidad' : 'Porcentaje'
+                  ]}
+                />
+                <Bar dataKey="cantidad" fill="#8884d8" name="cantidad" />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="mt-4 space-y-2">
+              {stats.paymentMethodData.map((item, index) => (
+                <div key={item.metodo} className="flex justify-between items-center text-sm">
+                  <span className="font-medium">{item.metodo}</span>
+                  <div className="flex items-center space-x-2">
+                    <span>{item.cantidad} ventas</span>
+                    <span className="text-muted-foreground">({item.porcentaje}%)</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
