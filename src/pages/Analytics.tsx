@@ -61,6 +61,7 @@ export function Analytics() {
             discount_amount,
             tax_amount,
             delivery_fee,
+            payment_method,
             sale_items (
               quantity,
               unit_price,
@@ -87,6 +88,7 @@ export function Analytics() {
             discount_amount,
             tax_amount,
             delivery_fee,
+            payment_method,
             sale_items (
               quantity,
               unit_price,
@@ -119,6 +121,7 @@ export function Analytics() {
         discount_amount?: number;
         tax_amount?: number;
         delivery_fee?: number;
+        payment_method: string;
         sale_items?: Array<{
           quantity: number;
           products?: { cost?: number };
@@ -292,6 +295,18 @@ export function Analytics() {
         value: count
       }));
 
+      // Métodos de pago
+      const paymentMethods = salesWithProfits.reduce((acc: Record<string, number>, sale) => {
+        acc[sale.payment_method] = (acc[sale.payment_method] || 0) + 1;
+        return acc;
+      }, {});
+
+      const paymentMethodData = Object.entries(paymentMethods).map(([method, count]) => ({
+        metodo: method,
+        cantidad: count,
+        porcentaje: salesWithProfits.length > 0 ? Math.round((count / salesWithProfits.length) * 100) : 0
+      }));
+
       return {
         totalSales,
         totalCosts,
@@ -309,6 +324,7 @@ export function Analytics() {
         categoryData,
         expenseCategoryData,
         customerTypeData,
+        paymentMethodData,
         netProfit: totalProfit - totalExpenses,
         // Current month stats
         currentMonth: {
@@ -700,6 +716,40 @@ export function Analytics() {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Métodos de Pago</CardTitle>
+            <p className="text-sm text-muted-foreground">Distribución de métodos de pago utilizados</p>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stats.paymentMethodData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="metodo" />
+                <YAxis />
+                <Tooltip
+                  formatter={(value, name) => [
+                    name === 'cantidad' ? `${value} ventas` : `${value}%`,
+                    name === 'cantidad' ? 'Cantidad' : 'Porcentaje'
+                  ]}
+                />
+                <Bar dataKey="cantidad" fill="#8884d8" name="cantidad" />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="mt-4 space-y-2">
+              {stats.paymentMethodData.map((item, index) => (
+                <div key={item.metodo} className="flex justify-between items-center text-sm">
+                  <span className="font-medium">{item.metodo}</span>
+                  <div className="flex items-center space-x-2">
+                    <span>{item.cantidad} ventas</span>
+                    <span className="text-muted-foreground">({item.porcentaje}%)</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
