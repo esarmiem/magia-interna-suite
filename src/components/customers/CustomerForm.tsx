@@ -316,7 +316,7 @@ export function CustomerForm({ customer, onClose }: CustomerFormProps) {
               <Button type="submit" disabled={mutation.isPending} className="flex-1">
                 {mutation.isPending ? 'Guardando...' : (customer ? 'Actualizar' : 'Crear')}
               </Button>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="default" onClick={onClose}>
                 Cancelar
               </Button>
             </div>
