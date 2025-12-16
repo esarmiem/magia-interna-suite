@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { ChristmasProvider } from "./contexts/ChristmasContext";
+import { SnowfallEffect } from "./components/SnowfallEffect";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedLayout } from "./components/ProtectedLayout";
 import { Dashboard } from "./pages/Dashboard";
@@ -23,12 +25,14 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <ThemeProvider defaultTheme="light">
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <ProtectedLayout>
-              <Routes>
+        <ChristmasProvider>
+          <AuthProvider>
+            <SnowfallEffect />
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ProtectedLayout>
+                <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/productos" element={<Products />} />
                 <Route path="/clientes" element={<Customers />} />
@@ -42,8 +46,9 @@ const App = () => (
             </ProtectedLayout>
           </BrowserRouter>
         </AuthProvider>
-      </ThemeProvider>
-    </TooltipProvider>
+      </ChristmasProvider>
+    </ThemeProvider>
+  </TooltipProvider>
   </QueryClientProvider>
 );
 
