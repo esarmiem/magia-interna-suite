@@ -10,9 +10,12 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Calendar
+  Calendar,
+  Snowflake
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
+import { useChristmas } from '@/contexts/ChristmasContext';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -31,6 +34,7 @@ const isMobileOrTablet = () => {
 };
 
 export function Sidebar() {
+  const { isChristmasMode, toggleChristmasMode } = useChristmas();
   // Estado inicial basado en el tamaño de pantalla
   const [collapsed, setCollapsed] = useState(() => isMobileOrTablet());
   const location = useLocation();
@@ -111,6 +115,16 @@ export function Sidebar() {
       {/* Footer */}
       {!collapsed && (
         <div className="p-4 border-t border-border">
+          <div className="flex items-center justify-between mb-4 px-1">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <Snowflake size={16} className="text-magia-purple" />
+              <span>Modo Navidad</span>
+            </div>
+            <Switch 
+              checked={isChristmasMode}
+              onCheckedChange={toggleChristmasMode}
+            />
+          </div>
           <div className="flex items-center justify-center mb-3">
             <div className="w-12 h-12 bg-gradient-to-br from-magia-purple to-magia-gold rounded-lg flex items-center justify-center">
               <img 
