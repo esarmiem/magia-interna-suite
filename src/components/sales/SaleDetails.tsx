@@ -82,7 +82,7 @@ export function SaleDetails({ sale, onClose }: SaleDetailsProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-background dark:text-primary-foreground font-mono">
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:text-primary-foreground font-mono">
         <CardHeader className="flex flex-row items-center justify-between pl-14">
           <CardTitle className='dark:text-primary-foreground font-bold'>Detalles de la Venta</CardTitle>
           <div className="flex items-center gap-2">
