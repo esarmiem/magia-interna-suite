@@ -313,7 +313,7 @@ ${customer.email ? `Email: ${customer.email}` : 'Sin email'}
             <div className="flex items-center space-x-2">
               <Users className="h-5 w-5 text-primary" />
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Clientes</p>
+                <p className="text-sm font-medium">Total Clientes</p>
                 <p className="text-2xl font-bold">{customers.length}</p>
               </div>
             </div>
@@ -325,7 +325,7 @@ ${customer.email ? `Email: ${customer.email}` : 'Sin email'}
             <div className="flex items-center space-x-2">
               <Gift className="h-5 w-5 text-magia-success" />
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Este Mes</p>
+                <p className="text-sm font-medium">Este Mes</p>
                 <p className="text-2xl font-bold">{currentMonthBirthdays.length}</p>
               </div>
             </div>
@@ -337,7 +337,7 @@ ${customer.email ? `Email: ${customer.email}` : 'Sin email'}
             <div className="flex items-center space-x-2">
               <Clock className="h-5 w-5 text-magia-warning" />
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Próximos 30 días</p>
+                <p className="text-sm font-medium">Próximos 30 días</p>
                 <p className="text-2xl font-bold">{upcomingBirthdays.length}</p>
               </div>
             </div>
@@ -372,7 +372,7 @@ ${customer.email ? `Email: ${customer.email}` : 'Sin email'}
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">{customer.name}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm">
                             {birthDate.toLocaleDateString('es-ES', { 
                               day: 'numeric', 
                               month: 'long' 

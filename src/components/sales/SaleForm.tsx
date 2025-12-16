@@ -431,7 +431,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                 <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
                   <PopoverTrigger asChild>
                     <Button
-                      variant="outline"
+                      variant="default"
                       role="combobox"
                       aria-expanded={customerOpen}
                       className="w-full justify-between"
@@ -462,8 +462,8 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                                 )}
                               />
                               <div className="flex flex-col">
-                                <span className="font-medium">{customer.name}</span>
-                                <span className="text-xs text-gray-500">
+                                <span className="font-medium dark:text-gray-100">{customer.name}</span>
+                                <span className="text-xs dark:text-gray-400">
                                   {customer.document_type ? customer.document_type + ': ' : ''}{customer.document_number || 'Sin documento'}
                                 </span>
                               </div>
@@ -498,7 +498,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <Label>Productos</Label>
-                <Button type="button" onClick={addSaleItem} variant="outline" size="sm">
+                <Button type="button" onClick={addSaleItem} variant="default" size="sm">
                   <Plus className="h-4 w-4 mr-2" />
                   Agregar Producto
                 </Button>
@@ -701,7 +701,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
               >
                 {mutation.isPending ? 'Guardando...' : (sale ? 'Actualizar' : 'Crear')}
               </Button>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="default" onClick={onClose}>
                 Cancelar
               </Button>
             </div>

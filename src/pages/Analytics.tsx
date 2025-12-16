@@ -374,11 +374,11 @@ export function Analytics() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ingresos Totales</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{formatColombianPeso(stats.totalSales)}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs">
               Ganancia neta: {formatColombianPeso(stats.netProfit)}
             </p>
           </CardContent>
@@ -387,11 +387,11 @@ export function Analytics() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Costos Totales</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            <TrendingDown className="h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{formatColombianPeso(stats.totalCosts)}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs">
               Descuentos: {formatColombianPeso(stats.totalDiscounts)}
             </p>
           </CardContent>
@@ -400,11 +400,11 @@ export function Analytics() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ganancia Bruta</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{formatColombianPeso(stats.totalProfit)}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs">
               {stats.totalProducts} productos en inventario
             </p>
           </CardContent>
@@ -413,11 +413,11 @@ export function Analytics() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Gastos Operativos</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            <ShoppingCart className="h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{formatColombianPeso(stats.totalExpenses)}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs">
               {stats.totalCustomers} clientes registrados
             </p>
           </CardContent>
@@ -438,7 +438,7 @@ export function Analytics() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{formatColombianPeso(stats.currentMonth.totalSales)}</div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs">
                 {stats.currentMonth.salesCount} ventas realizadas
               </p>
             </CardContent>
@@ -451,7 +451,7 @@ export function Analytics() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">{formatColombianPeso(stats.currentMonth.totalCosts)}</div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs">
                 Margen: {stats.currentMonth.totalSales > 0 ? 
                   Math.round(((stats.currentMonth.totalSales - stats.currentMonth.totalCosts) / stats.currentMonth.totalSales) * 100) : 0}%
               </p>
@@ -465,7 +465,7 @@ export function Analytics() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">{formatColombianPeso(stats.currentMonth.totalProfit)}</div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs">
                 Gastos: {formatColombianPeso(stats.currentMonth.totalExpenses)}
               </p>
             </CardContent>
@@ -480,7 +480,7 @@ export function Analytics() {
               <div className={`text-2xl font-bold ${stats.currentMonth.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatColombianPeso(stats.currentMonth.netProfit)}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs">
                 {stats.currentMonth.netProfit >= 0 ? 'Rentable' : 'En pérdida'} este mes
               </p>
             </CardContent>
@@ -539,11 +539,11 @@ export function Analytics() {
         <CardContent>
           <div ref={contentRef} className="p-4">
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">Ganancias Mensuales</h3>
-              <div className="text-3xl font-bold text-gray-800 mb-1">
+              <h3 className="text-lg font-semibold mb-2">Ganancias Mensuales</h3>
+              <div className="text-3xl font-bold mb-1">
                 {formatColombianPeso(stats?.monthlyData.reduce((sum, month) => sum + month.ganancia, 0) || 0)}
               </div>
-              <p className="text-sm text-blue-600">
+              <p className="text-sm">
                 Margen: {stats?.monthlyData.reduce((sum, month) => sum + month.ingresos, 0) > 0 ?
                   Math.round(((stats?.monthlyData.reduce((sum, month) => sum + month.ganancia, 0) || 0) /
                   (stats?.monthlyData.reduce((sum, month) => sum + month.ingresos, 0) || 1)) * 100) : 0}%
@@ -722,7 +722,7 @@ export function Analytics() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Métodos de Pago</CardTitle>
-            <p className="text-sm text-muted-foreground">Distribución de métodos de pago utilizados</p>
+            <p className="text-sm">Distribución de métodos de pago utilizados</p>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -745,7 +745,7 @@ export function Analytics() {
                   <span className="font-medium">{item.metodo}</span>
                   <div className="flex items-center space-x-2">
                     <span>{item.cantidad} ventas</span>
-                    <span className="text-muted-foreground">({item.porcentaje}%)</span>
+                    <span>({item.porcentaje}%)</span>
                   </div>
                 </div>
               ))}
