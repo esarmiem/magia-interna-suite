@@ -1,10 +1,11 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X } from 'lucide-react';
+import { X, ClipboardPaste } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,6 +38,66 @@ export function CustomerForm({ customer, onClose }: CustomerFormProps) {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const [whatsAppText, setWhatsAppText] = useState('');
+
+  const parseSpanishDate = (dateStr: string): string => {
+    const months: { [key: string]: string } = {
+        'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04', 'mayo': '05', 'junio': '06',
+        'julio': '07', 'agosto': '08', 'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+    };
+    
+    const parts = dateStr.toLowerCase().match(/(\d{1,2})\s+de\s+([a-z]+)/);
+    if (parts) {
+        const day = parts[1].padStart(2, '0');
+        const monthName = parts[2];
+        for (const [m, num] of Object.entries(months)) {
+            if (monthName.includes(m)) {
+                return `2000-${num}-${day}`;
+            }
+        }
+    }
+    return '';
+  };
+
+  const handleParseWhatsApp = () => {
+    if (!whatsAppText.trim()) return;
+
+    const lines = whatsAppText.split('\n');
+    const newData: Partial<typeof formData> = {
+        customer_type: 'regular',
+        document_type: 'CC'
+    };
+    
+    lines.forEach(line => {
+        if (!line.includes('》')) return;
+        const [keyPart, valuePart] = line.split('》');
+        const cleanKey = keyPart.replace('⭐️', '').trim().toLowerCase();
+        const value = valuePart.trim();
+        
+        if (!value) return;
+
+        if (cleanKey.includes('nombre')) newData.name = value;
+        else if (cleanKey.includes('ciudad')) newData.city = value;
+        else if (cleanKey.includes('correo')) newData.email = value;
+        else if (cleanKey.includes('telefono') || cleanKey.includes('teléfono')) newData.phone = value;
+        else if (cleanKey.includes('direccion') || cleanKey.includes('dirección')) newData.address = value;
+        else if (cleanKey.includes('cedula') || cleanKey.includes('ti')) {
+             const numbers = value.replace(/\D/g, '');
+             if (numbers) newData.document_number = numbers;
+        }
+        else if (cleanKey.includes('nacimiento')) {
+            const date = parseSpanishDate(value);
+            if (date) newData.birth_date = date;
+        }
+    });
+
+    setFormData(prev => ({ ...prev, ...newData }));
+    toast({
+        title: "Datos importados",
+        description: "Formulario completado desde el formato de WhatsApp.",
+    });
+  };
 
   const mutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -112,6 +173,29 @@ export function CustomerForm({ customer, onClose }: CustomerFormProps) {
           </Button>
         </CardHeader>
         <CardContent>
+          <div className="mb-6 p-4 bg-muted/50 rounded-lg space-y-2">
+            <Label htmlFor="whatsapp-paste" className="flex items-center gap-2">
+              <ClipboardPaste className="h-4 w-4" />
+              Pegar formato de WhatsApp
+            </Label>
+            <Textarea 
+              id="whatsapp-paste"
+              placeholder="Pegue aquí los datos del cliente..."
+              value={whatsAppText}
+              onChange={(e) => setWhatsAppText(e.target.value)}
+              className="min-h-[100px] text-xs font-mono"
+            />
+            <Button 
+              type="button" 
+              variant="secondary" 
+              size="sm" 
+              onClick={handleParseWhatsApp}
+              className="w-full"
+            >
+              Autocompletar Formulario
+            </Button>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="name">Nombre *</Label>
