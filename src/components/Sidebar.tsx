@@ -11,7 +11,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar,
-  Snowflake
+  Snowflake,
+  Megaphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Clientes', href: '/clientes', icon: Users },
   { name: 'Ventas', href: '/ventas', icon: ShoppingCart },
   { name: 'Gastos', href: '/gastos', icon: FileText },
+  { name: 'Promociones', href: '/promociones', icon: Megaphone },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Cumpleaños', href: '/cumpleanos', icon: Calendar },
 ];
