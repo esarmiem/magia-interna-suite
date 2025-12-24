@@ -49,4 +49,18 @@ Ofertas por tiempo limitado. ¡No te quedes sin tus favoritos!
 
 ¡Te esperamos!`,
   },
+  {
+    id: 'christmas',
+    name: 'Feliz Navidad',
+    subject: '¡Feliz Navidad te desea Magia Interna! 🎄✨',
+    body: `¡Hola!
+
+En esta época tan especial, queremos agradecerte de corazón por habernos acompañado durante este año.
+
+Gracias por hacer de Magia Interna algo tuyo y permitirnos ser parte de tus momentos especiales. Tu apoyo es nuestro mayor regalo.
+
+Deseamos que tengas una Navidad llena de amor, paz y mucha magia junto a tus seres queridos.
+
+¡Felices Fiestas!`,
+  },
 ];
