@@ -5,7 +5,7 @@ export const emailTemplates = [
     subject: '¡Ofertas Especiales en Magia Interna!',
     body: `¡Hola!
 
-Queremos contarte que tenemos descuentos increíbles en nuestra nueva colección.
+Queremos contarte que tenemos descuentos increíbles para ti.
 
 No te pierdas la oportunidad de renovar tu estilo con nuestras prendas únicas.
 
@@ -33,7 +33,7 @@ Ven a conocer las novedades que tenemos en Magia Interna.
 
 Sabemos que es tu mes especial y queremos celebrarlo contigo.
 
-Pasa por nuestra tienda y recibe un descuento especial en tu compra como regalo de cumpleaños.
+Pasa por nuestra tienda o contáctanos para recibir un descuento especial en tu compra como regalo de cumpleaños.
 
 ¡Que tengas un día mágico!`,
   },
