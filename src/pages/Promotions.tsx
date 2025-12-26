@@ -169,24 +169,40 @@ export function Promotions() {
     }
   };
 
-  const handleOpenMailClient = () => {
+  // Helper to split array into chunks
+  const chunkArray = (arr: string[], size: number) => {
+    return Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
+      arr.slice(i * size, i * size + size)
+    );
+  };
+
+  const handleOpenMailClient = (batchIndex?: number) => {
     const emails = getRecipientEmails();
     if (emails.length === 0) {
       toast.error('No hay destinatarios seleccionados');
       return;
     }
+
+    // Default batch size 50 to avoid Gmail limits
+    const BATCH_SIZE = 50;
+    const batches = chunkArray(emails, BATCH_SIZE);
     
-    // Mailto has limits, usually around 2000 chars. 
-    // We warn if list is too long, but try anyway.
-    const bcc = emails.join(',');
+    // If specific batch requested
+    const targetEmails = typeof batchIndex === 'number' 
+      ? batches[batchIndex] 
+      : emails; // Fallback
+
+    const bcc = targetEmails.join(',');
     const mailtoLink = `mailto:?bcc=${bcc}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body + (promoLink ? `\n\nVisita: ${promoLink}` : ''))}`;
     
     if (mailtoLink.length > 2000) {
-      toast.warning('La lista es muy larga para abrir directamente. Mejor usa "Copiar Correos".');
+      toast.warning('La lista es muy larga, podría cortarse. Intenta usar "Copiar Correos" o los botones por lotes.');
     }
     
     window.open(mailtoLink, '_blank');
   };
+
+  const batches = chunkArray(getRecipientEmails(), 50);
 
   return (
     <div className="space-y-6 p-6 pb-20 md:pb-6 animate-in fade-in duration-500">
@@ -479,16 +495,38 @@ export function Promotions() {
               </Tabs>
 
               <div className="mt-auto space-y-3 pt-6 border-t">
-                <Button className="w-full" onClick={handleOpenMailClient} disabled={getRecipientEmails().length === 0}>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Abrir en App de Correo
-                </Button>
+                {batches.length > 1 ? (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground mb-2">
+                      Enviar en grupos (Recomendado para evitar bloqueos):
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {batches.map((batch, index) => (
+                        <Button 
+                          key={index} 
+                          variant="outline" 
+                          className="w-full text-xs"
+                          onClick={() => handleOpenMailClient(index)}
+                        >
+                          <Mail className="mr-2 h-3 w-3" />
+                          Grupo {index + 1} ({batch.length})
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <Button className="w-full" onClick={() => handleOpenMailClient()} disabled={getRecipientEmails().length === 0}>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Abrir en App de Correo
+                  </Button>
+                )}
+                
                 <Button variant="secondary" className="w-full" onClick={handleCopyEmails} disabled={getRecipientEmails().length === 0}>
                   <Copy className="mr-2 h-4 w-4" />
-                  Copiar Lista de Correos
+                  Copiar Lista Completa ({getRecipientEmails().length})
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
-                  * Al hacer clic en "Abrir", se intentará abrir tu cliente de correo predeterminado con los destinatarios en CCO (Copia Oculta).
+                  * Al hacer clic en "Abrir", se intentará abrir tu cliente de correo predeterminado con los destinatarios en CCO.
                 </p>
               </div>
             </CardContent>
