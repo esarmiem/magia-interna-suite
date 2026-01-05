@@ -131,7 +131,7 @@ export const Login: React.FC = () => {
 
         {/* Footer con información */}
         <div className="text-center mt-8 text-sm text-gray-500 dark:text-gray-400 animate-fade-in">
-          <p>© 2025 Magia Interna Suite. Todos los derechos reservados.</p>
+          <p>© {new Date().getFullYear()} Magia Interna Suite. Todos los derechos reservados.</p>
         </div>
       </div>
     </div>
