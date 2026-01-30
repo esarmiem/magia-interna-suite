@@ -24,6 +24,7 @@ interface SaleItem {
   product_id: string;
   quantity: number;
   unit_price: number;
+  unit_cost: number;
   total_price: number;
 }
 
@@ -154,7 +155,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price, stock_quantity, sku, size')
+        .select('id, name, price, cost, stock_quantity, sku, size')
         .eq('is_active', true);
       if (error) throw error;
       return data;
@@ -275,6 +276,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       product_id: '',
       quantity: 1,
       unit_price: 0,
+      unit_cost: 0,
       total_price: 0,
     }]);
     setDisplayItems([...displayItems, {
@@ -301,6 +303,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
       const product = products.find(p => p.id === value);
       if (product) {
         updatedItems[index].unit_price = product.price;
+        updatedItems[index].unit_cost = product.cost || 0;
         updatedItems[index].total_price = updatedItems[index].quantity * product.price;
         updatedDisplayItems[index].unit_price = formatColombianPeso(product.price);
         updatedDisplayItems[index].total_price = formatColombianPeso(updatedItems[index].total_price);
