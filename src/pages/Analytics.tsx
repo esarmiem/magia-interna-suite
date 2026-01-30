@@ -115,6 +115,7 @@ export function Analytics() {
             sale_items (
               quantity,
               unit_price,
+              unit_cost,
               total_price,
               products (
                 cost
@@ -148,6 +149,7 @@ export function Analytics() {
             sale_items (
               quantity,
               unit_price,
+              unit_cost,
               total_price,
               products (
                 cost
@@ -183,12 +185,13 @@ export function Analytics() {
         payment_method: string;
         sale_items?: Array<{
           quantity: number;
+          unit_cost?: number;
           products?: { cost?: number };
         }>;
       }) => {
         const totalCost =
           sale.sale_items?.reduce((sum: number, item) => {
-            const itemCost = item.products?.cost || 0;
+            const itemCost = item.unit_cost ?? item.products?.cost ?? 0;
             return sum + itemCost * item.quantity;
           }, 0) || 0;
 
