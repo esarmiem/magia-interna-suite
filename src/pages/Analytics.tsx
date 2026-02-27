@@ -40,6 +40,39 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: { payload: { total: number; categories: Record<string, number> } }[];
+  label?: string;
+}) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white p-4 border border-gray-200 rounded shadow-md z-50">
+        <p className="font-bold mb-2 text-gray-800">{label}</p>
+        <p className="text-sm mb-2 font-semibold text-blue-600">
+          Total: {data.total} prendas
+        </p>
+        <div className="text-xs space-y-1">
+          {Object.entries(data.categories).map(
+            ([cat, count]) => (
+              <div key={cat} className="flex justify-between gap-4">
+                <span className="capitalize text-gray-600">{cat}:</span>
+                <span className="font-medium">{count}</span>
+              </div>
+            )
+          )}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function Analytics() {
   const contentRef = useRef<HTMLDivElement>(null);
   const currentYear = new Date().getFullYear();
@@ -118,7 +151,8 @@ export function Analytics() {
               unit_cost,
               total_price,
               products (
-                cost
+                cost,
+                category
               )
             )
           `
@@ -152,7 +186,8 @@ export function Analytics() {
               unit_cost,
               total_price,
               products (
-                cost
+                cost,
+                category
               )
             )
           `
@@ -348,6 +383,62 @@ export function Analytics() {
         };
       });
 
+      // Calcular prendas vendidas por mes y categoría
+      const productSalesByMonth = sales.reduce(
+        (
+          acc: Record<
+            string,
+            { total: number; categories: Record<string, number> }
+          >,
+          sale
+        ) => {
+          const date = new Date(sale.sale_date);
+          const monthIndex = date.getMonth();
+          const monthNames = [
+            "ene",
+            "feb",
+            "mar",
+            "abr",
+            "may",
+            "jun",
+            "jul",
+            "ago",
+            "sep",
+            "oct",
+            "nov",
+            "dic",
+          ];
+          const month = monthNames[monthIndex];
+
+          if (!acc[month]) {
+            acc[month] = { total: 0, categories: {} };
+          }
+
+          sale.sale_items?.forEach(
+            (item: { quantity: number; products: { category: string } }) => {
+              const category = item.products?.category || "Sin categoría";
+              const quantity = item.quantity || 0;
+
+              acc[month].total += quantity;
+              acc[month].categories[category] =
+                (acc[month].categories[category] || 0) + quantity;
+            }
+          );
+
+          return acc;
+        },
+        {}
+      );
+
+      const monthlyProductSalesData = months.map((month) => {
+        const data = productSalesByMonth[month] || { total: 0, categories: {} };
+        return {
+          month: month.charAt(0).toUpperCase() + month.slice(1),
+          total: data.total,
+          categories: data.categories,
+        };
+      });
+
       // Ganancia por semana
       const profitByWeek = salesWithProfits.reduce(
         (
@@ -511,6 +602,7 @@ export function Analytics() {
         totalCustomers,
         lowStockProducts,
         monthlyData,
+        monthlyProductSalesData,
         weeklyData,
         dailyData,
         categoryData,
@@ -1016,6 +1108,52 @@ export function Analytics() {
                 </Pie>
                 <Tooltip />
               </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <div className="flex flex-row justify-between items-start">
+              <div>
+                <CardTitle>Ventas de Prendas por Mes</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Cantidad de prendas vendidas y sus categorías
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Select
+                  value={selectedYear.toString()}
+                  onValueChange={(value) => setSelectedYear(parseInt(value))}
+                >
+                  <SelectTrigger className="w-24 sm:w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 6 }, (_, i) => currentYear - i).map(
+                      (year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      )
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stats.monthlyProductSalesData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ fill: "transparent" }}
+                />
+                <Bar dataKey="total" fill="#8884d8" name="Prendas Vendidas" />
+              </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
