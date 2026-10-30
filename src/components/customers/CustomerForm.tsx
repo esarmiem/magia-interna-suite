@@ -140,7 +140,8 @@ export function CustomerForm({ customer, onClose }: CustomerFormProps) {
     postal_code: data.postal_code.trim() === '' ? null : data.postal_code,
     birth_date: data.birth_date.trim() === '' ? null : data.birth_date,
     document_type: data.document_type.trim() === '' ? null : data.document_type,
-    // name y document_number se mantienen porque son obligatorios
+    document_number: data.document_number.trim() === '' ? null : data.document_number,
+    // name se mantiene porque es obligatorio
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -299,7 +300,6 @@ export function CustomerForm({ customer, onClose }: CustomerFormProps) {
                 id="document_number"
                 value={formData.document_number}
                 onChange={(e) => handleChange('document_number', e.target.value)}
-                required
               />
             </div>
 

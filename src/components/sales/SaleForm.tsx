@@ -74,7 +74,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('customers')
-        .select('id, name, document_number, document_type')
+        .select('id, name, document_number, document_type, phone')
         .eq('is_active', true);
       if (error) throw error;
       return data;
@@ -83,7 +83,8 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
 
   const filteredCustomers = customers.filter((customer: Customer) =>
     customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-    (customer.document_number && customer.document_number.toLowerCase().includes(customerSearch.toLowerCase()))
+    (customer.document_number && customer.document_number.toLowerCase().includes(customerSearch.toLowerCase())) ||
+    (customer.phone && customer.phone.toLowerCase().includes(customerSearch.toLowerCase()))
   );
 
   // Función para buscar o crear el cliente anónimo
@@ -452,7 +453,7 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                           {filteredCustomers.map((customer: Customer) => (
                             <CommandItem
                               key={customer.id}
-                              value={customer.name + (customer.document_number ? ' ' + customer.document_number : '')}
+                              value={customer.name + (customer.document_number ? ' ' + customer.document_number : '') + (customer.phone ? ' ' + customer.phone : '')}
                               onSelect={() => {
                                 handleChange('customer_id', customer.id);
                                 setCustomerOpen(false);
@@ -469,6 +470,11 @@ export function SaleForm({ sale, onClose }: SaleFormProps) {
                                 <span className="text-xs dark:text-gray-400">
                                   {customer.document_type ? customer.document_type + ': ' : ''}{customer.document_number || 'Sin documento'}
                                 </span>
+                                {customer.phone && (
+                                  <span className="text-xs dark:text-gray-400">
+                                    Tel: {customer.phone}
+                                  </span>
+                                )}
                               </div>
                             </CommandItem>
                           ))}
